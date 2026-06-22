@@ -2,9 +2,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppStore, getProviderLabel } from "../store/useAppStore";
 import { Logo } from "./ui/Logo";
 import { UserProfile } from "./UserProfile";
-import { DashboardIcon3D, GeneratorIcon3D, ScriptsIcon3D, KnowledgeIcon3D, SettingsIcon3D } from "./ui/Icons3D";
+import {
+  DashboardIcon3D, GeneratorIcon3D, ScriptsIcon3D,
+  KnowledgeIcon3D, SettingsIcon3D,
+} from "./ui/Icons3D";
 
-function NavButton({ active, label, onClick, icon, color }: { active: boolean; label: string; onClick: () => void; icon: React.ReactNode; color: string }) {
+type NavColor = "violet" | "rose" | "emerald" | "cyan" | "amber";
+
+function NavButton({ active, label, onClick, icon, color }: {
+  active: boolean; label: string; onClick: () => void;
+  icon: React.ReactNode; color: NavColor;
+}) {
   const cls = `nav-link ${active ? `nav-link-${color} active` : ""}`;
   const accentVar = `var(--accent-${color})`;
   return (
@@ -12,6 +20,16 @@ function NavButton({ active, label, onClick, icon, color }: { active: boolean; l
       <span style={{ color: active ? accentVar : "var(--text-muted)" }}>{icon}</span>
       <span style={{ color: active ? accentVar : undefined }}>{label}</span>
     </button>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="px-3 pt-5 pb-1.5">
+      <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "var(--text-muted)" }}>
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -36,6 +54,21 @@ function ThemeToggle({ theme, onToggle }: { theme: "dark" | "light"; onToggle: (
     </button>
   );
 }
+
+function InlineSvg({ path, size = 20 }: { path: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d={path} />
+    </svg>
+  );
+}
+
+const ICONS = {
+  regression: "M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605",
+  analytics: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z",
+  suites: "M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25",
+  admin: "M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z",
+};
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -74,7 +107,8 @@ export function Sidebar() {
       }`}
       style={{ background: "var(--bg-card)", borderColor: "var(--border-default)" }}
     >
-      <div className="flex items-center justify-between gap-3 px-5 py-5 border-b" style={{ borderColor: "var(--border-default)" }}>
+      {/* Logo header */}
+      <div className="flex items-center justify-between gap-3 px-5 border-b shrink-0" style={{ borderColor: "var(--border-default)", height: 52 }}>
         <Logo variant="wordmark" />
         <button
           className="flex lg:hidden h-8 w-8 items-center justify-center rounded-lg btn-ghost"
@@ -88,37 +122,68 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <NavButton active={activeKey === "dashboard"} color="violet" label="Dashboard" onClick={() => navigateToPage("/dashboard")}
-          icon={<DashboardIcon3D size={20} />}
-        />
-        <NavButton active={activeKey === "generator"} color="rose" label="Test Case Generator" onClick={() => navigateToPage("/generator")}
-          icon={<GeneratorIcon3D size={20} />}
-        />
-        <NavButton active={activeKey === "test-scripts"} color="emerald" label="Automation Scripts" onClick={() => navigateToPage("/test-scripts")}
-          icon={<ScriptsIcon3D size={20} />}
-        />
-        <NavButton active={activeKey === "knowledge"} color="cyan" label="Knowledge Base" onClick={() => navigateToPage("/knowledge")}
-          icon={<KnowledgeIcon3D size={20} />}
-        />
-        <NavButton active={activeKey === "ai-settings"} color="amber" label="AI Configuration" onClick={() => navigateToPage("/ai-settings")}
-          icon={<SettingsIcon3D size={20} />}
-        />
-        {user?.role === "Admin" && (
-          <NavButton active={activeKey === "admin"} color="rose" label="Admin Panel" onClick={() => navigateToPage("/admin")}
-            icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>}
+      {/* Navigation */}
+      <nav className="flex-1 px-3 overflow-y-auto" style={{ paddingTop: 4, paddingBottom: 8 }}>
+        {/* Dashboard */}
+        <div className="py-1">
+          <NavButton active={activeKey === "dashboard"} color="violet" label="Dashboard" onClick={() => navigateToPage("/dashboard")}
+            icon={<DashboardIcon3D size={20} />}
           />
-        )}
+        </div>
+
+        {/* Build section */}
+        <SectionHeader label="Build" />
+        <div className="py-1 space-y-0.5">
+          <NavButton active={activeKey === "generator"} color="rose" label="Generator" onClick={() => navigateToPage("/generator")}
+            icon={<GeneratorIcon3D size={20} />}
+          />
+          <NavButton active={activeKey === "test-scripts"} color="emerald" label="Scripts" onClick={() => navigateToPage("/test-scripts")}
+            icon={<ScriptsIcon3D size={20} />}
+          />
+          <NavButton active={activeKey === "knowledge"} color="cyan" label="Knowledge" onClick={() => navigateToPage("/knowledge")}
+            icon={<KnowledgeIcon3D size={20} />}
+          />
+        </div>
+
+        {/* Monitor section */}
+        <SectionHeader label="Monitor" />
+        <div className="py-1 space-y-0.5">
+          <NavButton active={activeKey === "regression"} color="violet" label="Regression" onClick={() => navigateToPage("/regression")}
+            icon={<InlineSvg path={ICONS.regression} size={20} />}
+          />
+          <NavButton active={activeKey === "analytics"} color="amber" label="Analytics" onClick={() => navigateToPage("/analytics")}
+            icon={<InlineSvg path={ICONS.analytics} size={20} />}
+          />
+          <NavButton active={activeKey === "suites"} color="cyan" label="Suites" onClick={() => navigateToPage("/suites")}
+            icon={<InlineSvg path={ICONS.suites} size={20} />}
+          />
+        </div>
+
+        {/* System section */}
+        <SectionHeader label="System" />
+        <div className="py-1 space-y-0.5">
+          <NavButton active={activeKey === "settings"} color="amber" label="Settings" onClick={() => navigateToPage("/settings")}
+            icon={<SettingsIcon3D size={20} />}
+          />
+          {user?.role === "Admin" && (
+            <NavButton active={activeKey === "admin"} color="rose" label="Admin" onClick={() => navigateToPage("/admin")}
+              icon={<InlineSvg path={ICONS.admin} size={20} />}
+            />
+          )}
+        </div>
       </nav>
 
-      <div className="px-3 py-2">
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
-      </div>
-
-      <div className="px-3 pb-3">
+      {/* AI Engine card */}
+      <div className="px-3 pb-2 shrink-0">
         <div className="rounded-lg p-4" style={{
-          background: hasSavedApiKeyForProvider ? "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(6,182,212,0.05))" : "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(244,63,94,0.05))",
-          border: `1px solid ${hasSavedApiKeyForProvider ? "color-mix(in srgb, var(--accent-emerald) 25%, transparent)" : "color-mix(in srgb, var(--accent-amber) 25%, transparent)"}`,
+          background: hasSavedApiKeyForProvider
+            ? "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(6,182,212,0.05))"
+            : "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(244,63,94,0.05))",
+          border: `1px solid ${
+            hasSavedApiKeyForProvider
+              ? "color-mix(in srgb, var(--accent-emerald) 25%, transparent)"
+              : "color-mix(in srgb, var(--accent-amber) 25%, transparent)"
+          }`,
         }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="relative flex h-2 w-2">
@@ -134,6 +199,12 @@ export function Sidebar() {
         </div>
       </div>
 
+      {/* Theme toggle */}
+      <div className="px-3 py-1 shrink-0">
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+      </div>
+
+      {/* User profile */}
       {user && (
         <UserProfile
           user={user}

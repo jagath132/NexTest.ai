@@ -1,8 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppStore, getProviderLabel } from "../store/useAppStore";
 import { Card } from "../components/ui/Card";
 import { MobilePageHeader } from "../components/PageHeader";
 import { FeatureIcon3D } from "../components/ui/Icons3D";
+import { WelcomePopup } from "../components/WelcomePopup";
 
 const metricColors = [
   { accent: "var(--accent-rose)", soft: "var(--accent-rose-soft)", border: "color-mix(in srgb, var(--accent-rose) 20%, transparent)" },
@@ -41,10 +43,12 @@ function formatHistoryTime(dateStr: string) {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const history = useAppStore((s) => s.history);
   const qaResult = useAppStore((s) => s.qaResult);
   const provider = useAppStore((s) => s.provider);
   const savedProviderKeys = useAppStore((s) => s.savedProviderKeys);
+  const [showWelcome, setShowWelcome] = useState(searchParams.get("welcome") === "true");
 
   const providerLabel = getProviderLabel(provider);
   const hasConfiguredApiKey = provider ? !!savedProviderKeys[provider] : false;
@@ -52,9 +56,15 @@ export function DashboardPage() {
   const testCaseCount = qaResult?.testCases.length ?? 0;
   const contextCount = qaResult?.knowledgeContext?.length ?? 0;
 
+  const handleWelcomeDismiss = () => {
+    setShowWelcome(false);
+    setSearchParams({});
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <MobilePageHeader pageKey="dashboard" />
+      {showWelcome && <WelcomePopup onDismiss={handleWelcomeDismiss} />}
 
 
 
@@ -62,7 +72,10 @@ export function DashboardPage() {
         <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
           <div className="p-6 sm:p-8 lg:p-10">
             <span className="badge badge-primary">Professional QA Workspace</span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mt-4 mb-3" style={{ color: "var(--text-primary)" }}>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4 mb-1">
+              Ship with <span className="gradient-shift">confidence</span>
+            </h1>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>
               Turn requirements into test cases, scripts, and traceable QA output.
             </h2>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>

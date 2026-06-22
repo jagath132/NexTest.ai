@@ -20,9 +20,9 @@ const EMPTY_PLAN = {
 };
 
 const ACCENT_RECIPE: Record<string, { color: string; bg: string }> = {
-  free: { color: "var(--text-muted)", bg: "transparent" },
-  pro: { color: "var(--accent)", bg: "var(--accent-soft)" },
-  enterprise: { color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+  free: { color: "var(--color-text-muted)", bg: "transparent" },
+  pro: { color: "var(--color-accent)", bg: "var(--color-accent-subtle)" },
+  enterprise: { color: "var(--color-warning)", bg: "var(--color-warning-subtle)" },
 };
 
 export function PlanModal({ plan, onClose, onSaved }: Props) {
@@ -97,7 +97,7 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
     return `$${(cents / 100).toFixed(2)}`;
   };
 
-  const accent = ACCENT_RECIPE[form.id] || { color: "var(--accent)", bg: "var(--accent-soft)" };
+  const accent = ACCENT_RECIPE[form.id] || { color: "var(--color-accent)", bg: "var(--color-accent-subtle)" };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -112,10 +112,10 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
         {toast && (
           <div style={{ padding: "0 24px", marginTop: 8 }}>
             <div style={{
-              padding: "10px 14px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 8,
-              background: toast.type === "success" ? "var(--success-soft)" : "var(--danger-soft)",
-              color: toast.type === "success" ? "var(--success)" : "var(--danger)",
-              border: `1px solid ${toast.type === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+              padding: "10px 14px", borderRadius: 6, fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+              background: toast.type === "success" ? "var(--color-success-subtle)" : "var(--color-danger-subtle)",
+              color: toast.type === "success" ? "var(--color-success)" : "var(--color-danger)",
+              border: `1px solid ${toast.type === "success" ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.25)"}`,
             }}>
               {toast.type === "success" ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
@@ -128,16 +128,9 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
         )}
 
         {mode === "edit" && (
-          <div style={{ display: "flex", gap: 0, padding: "16px 24px 0", borderBottom: "1px solid var(--border-default)" }}>
+          <div className="modal-tabs">
             {(["details", "edit"] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)}
-                style={{
-                  padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", background: "none",
-                  color: tab === t ? "var(--accent)" : "var(--text-muted)", border: "none",
-                  borderBottom: tab === t ? "2px solid var(--accent)" : "2px solid transparent",
-                  transition: "color 0.15s, border-color 0.15s",
-                }}
-              >
+              <button key={t} className={`modal-tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
                 {t === "details" ? "Plan Details" : "Edit Plan"}
               </button>
             ))}
@@ -160,14 +153,14 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Pricing</label>
+                <div className="section-title" style={{ marginBottom: 6 }}>Pricing</div>
                 <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 1fr", gap: 10 }}>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Price (cents)</label>
+                    <label>Price (cents)</label>
                     <input className="form-input" type="number" min={0} value={form.price} onChange={(e) => set("price", parseInt(e.target.value) || 0)} />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Currency</label>
+                    <label>Currency</label>
                     <select className="form-input" value={form.currency} onChange={(e) => set("currency", e.target.value)}>
                       <option value="usd">USD</option>
                       <option value="eur">EUR</option>
@@ -175,7 +168,7 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Period</label>
+                    <label>Period</label>
                     <select className="form-input" value={form.period} onChange={(e) => set("period", e.target.value)}>
                       <option value="monthly">Monthly</option>
                       <option value="yearly">Yearly</option>
@@ -202,25 +195,25 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Limits</label>
+                <div className="section-title" style={{ marginBottom: 6 }}>Limits</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Max Users</label>
+                    <label>Max Users</label>
                     <input className="form-input" type="number" min={0} value={form.maxUsers ?? ""} onChange={(e) => set("maxUsers", e.target.value ? parseInt(e.target.value) : null)} placeholder="Unlimited" />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Max Test Cases/mo</label>
+                    <label>Max Test Cases/mo</label>
                     <input className="form-input" type="number" min={0} value={form.maxTestCases ?? ""} onChange={(e) => set("maxTestCases", e.target.value ? parseInt(e.target.value) : null)} placeholder="Unlimited" />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>AI Providers</label>
+                    <label>AI Providers</label>
                     <input className="form-input" type="number" min={0} value={form.aiProviders ?? ""} onChange={(e) => set("aiProviders", e.target.value ? parseInt(e.target.value) : null)} placeholder="Unlimited" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Settings</label>
+                <div className="section-title" style={{ marginBottom: 6 }}>Settings</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {[
                     { key: "popular", label: "Popular" },
@@ -231,15 +224,12 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                     { key: "customIntegrations", label: "Custom Integrations" },
                     { key: "onPremise", label: "On-Premise" },
                   ].map(({ key, label }) => (
-                    <label key={key} style={{
-                      display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer",
-                      padding: "6px 12px", borderRadius: 8,
-                      background: (form as any)[key] ? "var(--accent-soft)" : "var(--bg-secondary)",
-                      border: `1px solid ${(form as any)[key] ? "var(--accent)" : "var(--border-default)"}`,
-                      color: (form as any)[key] ? "var(--accent)" : "var(--text-muted)",
-                      transition: "all 0.15s",
+                    <label key={key} className="toggle-chip" style={{
+                      background: (form as any)[key] ? "var(--color-accent-subtle)" : "var(--color-bg)",
+                      borderColor: (form as any)[key] ? "var(--color-accent)" : "var(--color-border)",
+                      color: (form as any)[key] ? "var(--color-accent)" : "var(--color-text-muted)",
                     }}>
-                      <input type="checkbox" checked={(form as any)[key]} onChange={(e) => set(key as any, e.target.checked)} style={{ display: "none" }} />
+                      <input type="checkbox" checked={(form as any)[key]} onChange={(e) => set(key as any, e.target.checked)} />
                       {(form as any)[key] ? (
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
                       ) : (
@@ -251,7 +241,7 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: "1px solid var(--border-default)", paddingTop: 16 }}>
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: "1px solid var(--color-border-light)", paddingTop: 16 }}>
                 <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={sending}>
                   {sending ? "Creating..." : "Create Plan"}
@@ -259,33 +249,21 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
               </div>
             </form>
           ) : tab === "details" ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{
-                borderRadius: 12, padding: "24px 20px", textAlign: "center",
-                background: `linear-gradient(135deg, ${accent.bg || "var(--accent-soft)"}, transparent)`,
-                border: `1px solid ${accent.bg || "var(--border-default)"}`,
-                position: "relative", overflow: "hidden",
-              }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 14, display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  background: accent.bg || "var(--accent-soft)", color: accent.color || "var(--accent)",
-                  fontSize: 20, fontWeight: 700, marginBottom: 12,
-                  border: `1px solid ${accent.color || "var(--accent)"}20`,
-                }}>
+            <div className="details-section">
+              <div className="plan-card">
+                <div className="plan-card-icon" style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.color}20` }}>
                   {form.name.charAt(0)}
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>{form.name}</div>
-                <div style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 2 }}>{form.id}</div>
-                <div style={{ fontSize: 32, fontWeight: 300, color: form.price === 0 ? "var(--text-muted)" : "var(--text-primary)", marginTop: 8 }}>
+                <div className="plan-card-name">{form.name}</div>
+                <div className="plan-card-id">{form.id}</div>
+                <div className={`plan-card-price${form.price === 0 ? " free" : ""}`}>
                   {formatPrice(form.price)}
-                  <span style={{ fontSize: 14, color: "var(--text-muted)", fontWeight: 400, marginLeft: 2 }}>
+                  <span className="plan-card-period">
                     {form.period === "forever" ? "" : `/${form.period === "yearly" ? "yr" : "mo"}`}
                   </span>
                 </div>
-                {form.description && (
-                  <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6 }}>{form.description}</div>
-                )}
-                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
+                {form.description && <div className="plan-card-description">{form.description}</div>}
+                <div className="plan-card-badges">
                   <span className={`badge ${form.active ? "badge-available" : "badge-expired"}`} style={{ fontSize: 11 }}>
                     {form.active ? "Active" : "Inactive"}
                   </span>
@@ -294,33 +272,31 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div style={{ padding: "12px 16px", borderRadius: 10, background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Pricing</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{form.currency.toUpperCase()} {formatPrice(form.price)}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>per {form.period}</div>
+                <div className="plan-info-card">
+                  <div className="header">Pricing</div>
+                  <div className="main">{form.currency.toUpperCase()} {formatPrice(form.price)}</div>
+                  <div className="sub">per {form.period}</div>
                 </div>
-                <div style={{ padding: "12px 16px", borderRadius: 10, background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Limits</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px", fontSize: 13 }}>
-                    <span style={{ color: "var(--text-muted)" }}>Users:</span>
-                    <span>{form.maxUsers !== null ? form.maxUsers : "Unlimited"}</span>
-                    <span style={{ color: "var(--text-muted)" }}>Tests/mo:</span>
-                    <span>{form.maxTestCases !== null ? form.maxTestCases.toLocaleString() : "Unlimited"}</span>
-                    <span style={{ color: "var(--text-muted)" }}>AI Providers:</span>
-                    <span>{form.aiProviders !== null ? form.aiProviders : "Unlimited"}</span>
+                <div className="plan-info-card">
+                  <div className="header">Limits</div>
+                  <div className="plan-limits-grid">
+                    <span className="label">Users:</span>
+                    <span className="value">{form.maxUsers !== null ? form.maxUsers : "Unlimited"}</span>
+                    <span className="label">Tests/mo:</span>
+                    <span className="value">{form.maxTestCases !== null ? form.maxTestCases.toLocaleString() : "Unlimited"}</span>
+                    <span className="label">AI Providers:</span>
+                    <span className="value">{form.aiProviders !== null ? form.aiProviders : "Unlimited"}</span>
                   </div>
                 </div>
               </div>
 
               {form.features.length > 0 && (
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Features ({form.features.length})
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  <div className="section-title">Features ({form.features.length})</div>
+                  <div className="feature-grid">
                     {form.features.map((f, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8, background: "var(--bg-secondary)", fontSize: 13 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth={2.5} style={{ flexShrink: 0 }}>
+                      <div key={i} className="feature-item">
+                        <svg className="feature-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                         {f}
@@ -330,11 +306,9 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                 </div>
               )}
 
-              {form.advancedExport || form.regressionTesting || form.prioritySupport || form.customIntegrations || form.onPremise ? (
+              {(form.advancedExport || form.regressionTesting || form.prioritySupport || form.customIntegrations || form.onPremise) && (
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Capabilities
-                  </div>
+                  <div className="section-title">Capabilities</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {form.advancedExport && <span className="badge badge-available" style={{ fontSize: 11 }}>Advanced Export</span>}
                     {form.regressionTesting && <span className="badge badge-available" style={{ fontSize: 11 }}>Regression Testing</span>}
@@ -343,15 +317,15 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                     {form.onPremise && <span className="badge badge-available" style={{ fontSize: 11 }}>On-Premise</span>}
                   </div>
                 </div>
-              ) : null}
+              )}
 
-              <div style={{ display: "flex", gap: 8, borderTop: "1px solid var(--border-default)", paddingTop: 16 }}>
-                <button className="btn btn-primary" onClick={() => setTab("edit")} style={{ fontSize: 12 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+              <div className="action-row">
+                <button className="btn btn-primary btn-sm" onClick={() => setTab("edit")}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   Edit
                 </button>
-                <button className="btn btn-danger" onClick={handleDelete} style={{ fontSize: 12 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                <button className="btn btn-danger btn-sm" onClick={handleDelete}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
                   Delete
                 </button>
               </div>
@@ -370,14 +344,14 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Pricing</label>
+                <div className="section-title" style={{ marginBottom: 6 }}>Pricing</div>
                 <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 1fr", gap: 10 }}>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Price (cents)</label>
+                    <label>Price (cents)</label>
                     <input className="form-input" type="number" min={0} value={form.price} onChange={(e) => set("price", parseInt(e.target.value) || 0)} />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Currency</label>
+                    <label>Currency</label>
                     <select className="form-input" value={form.currency} onChange={(e) => set("currency", e.target.value)}>
                       <option value="usd">USD</option>
                       <option value="eur">EUR</option>
@@ -385,7 +359,7 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Period</label>
+                    <label>Period</label>
                     <select className="form-input" value={form.period} onChange={(e) => set("period", e.target.value)}>
                       <option value="monthly">Monthly</option>
                       <option value="yearly">Yearly</option>
@@ -412,25 +386,25 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Limits</label>
+                <div className="section-title" style={{ marginBottom: 6 }}>Limits</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Max Users</label>
+                    <label>Max Users</label>
                     <input className="form-input" type="number" min={0} value={form.maxUsers ?? ""} onChange={(e) => set("maxUsers", e.target.value ? parseInt(e.target.value) : null)} placeholder="Unlimited" />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>Max Test Cases/mo</label>
+                    <label>Max Test Cases/mo</label>
                     <input className="form-input" type="number" min={0} value={form.maxTestCases ?? ""} onChange={(e) => set("maxTestCases", e.target.value ? parseInt(e.target.value) : null)} placeholder="Unlimited" />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: 11 }}>AI Providers</label>
+                    <label>AI Providers</label>
                     <input className="form-input" type="number" min={0} value={form.aiProviders ?? ""} onChange={(e) => set("aiProviders", e.target.value ? parseInt(e.target.value) : null)} placeholder="Unlimited" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Settings</label>
+                <div className="section-title" style={{ marginBottom: 6 }}>Settings</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {[
                     { key: "popular", label: "Popular" },
@@ -441,15 +415,12 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                     { key: "customIntegrations", label: "Custom Integrations" },
                     { key: "onPremise", label: "On-Premise" },
                   ].map(({ key, label }) => (
-                    <label key={key} style={{
-                      display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer",
-                      padding: "6px 12px", borderRadius: 8,
-                      background: (form as any)[key] ? "var(--accent-soft)" : "var(--bg-secondary)",
-                      border: `1px solid ${(form as any)[key] ? "var(--accent)" : "var(--border-default)"}`,
-                      color: (form as any)[key] ? "var(--accent)" : "var(--text-muted)",
-                      transition: "all 0.15s",
+                    <label key={key} className="toggle-chip" style={{
+                      background: (form as any)[key] ? "var(--color-accent-subtle)" : "var(--color-bg)",
+                      borderColor: (form as any)[key] ? "var(--color-accent)" : "var(--color-border)",
+                      color: (form as any)[key] ? "var(--color-accent)" : "var(--color-text-muted)",
                     }}>
-                      <input type="checkbox" checked={(form as any)[key]} onChange={(e) => set(key as any, e.target.checked)} style={{ display: "none" }} />
+                      <input type="checkbox" checked={(form as any)[key]} onChange={(e) => set(key as any, e.target.checked)} />
                       {(form as any)[key] ? (
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
                       ) : (
@@ -461,7 +432,7 @@ export function PlanModal({ plan, onClose, onSaved }: Props) {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: "1px solid var(--border-default)", paddingTop: 16 }}>
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: "1px solid var(--color-border-light)", paddingTop: 16 }}>
                 <button type="submit" className="btn btn-primary" disabled={sending}>
                   {sending ? "Saving..." : "Save Changes"}
                 </button>

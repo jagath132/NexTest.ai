@@ -402,7 +402,7 @@ export function ProfilePage() {
               <label htmlFor="support-message" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>Message</label>
               <textarea id="support-message" required rows={4} value={supportForm.message} onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))} placeholder="Describe your issue in detail..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all resize-y" style={{ background: "var(--bg-tertiary)", color: "var(--text-primary)", border: "1px solid var(--border-default)" }} />
             </div>
-            <button type="submit" className="w-full py-3 text-sm font-semibold rounded-xl transition-all hover:opacity-90" style={{ background: "var(--gradient-rainbow)", color: "#fff" }}>
+            <button type="submit" className="w-full py-3 text-sm font-semibold rounded-xl transition-all hover:opacity-90" style={{ background: "var(--accent)", color: "#fff" }}>
               Send Message
             </button>
           </form>

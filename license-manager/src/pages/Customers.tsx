@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { api, type Customer } from "../lib/api";
-import { CustomerModal } from "../components/CustomerModal";
+import { api, type Customer, type EmailLog } from "../lib/api";
 
 export function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
+  const [customerEmailLogs, setCustomerEmailLogs] = useState<EmailLog[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const fetchCustomers = () => {
     api.get<{ customers: Customer[] }>("/api/admin/customers")
@@ -17,6 +18,17 @@ export function CustomersPage() {
 
   useEffect(() => { fetchCustomers(); }, []);
 
+  async function openDetail(c: Customer) {
+    setDetailCustomer(c);
+    setLoadingDetail(true);
+    setCustomerEmailLogs([]);
+    try {
+      const res = await api.get<{ logs: EmailLog[] }>("/api/admin/email/logs");
+      setCustomerEmailLogs(res.data.logs.filter((l) => l.to === c.email));
+    } catch { /* ignore */ }
+    setLoadingDetail(false);
+  }
+
   const filtered = search
     ? customers.filter((c) => c.email.toLowerCase().includes(search.toLowerCase()))
     : customers;
@@ -25,7 +37,7 @@ export function CustomersPage() {
     <div>
       <div className="section-header">
         <h3>Customers</h3>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
           {customers.length > 0 ? `${customers.length} total` : ""}
         </span>
       </div>
@@ -71,24 +83,23 @@ export function CustomersPage() {
               </thead>
               <tbody>
                 {filtered.map((c) => (
-                  <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => setSelectedId(c.id)}>
+                  <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => openDetail(c)}>
                     <td>{c.email}</td>
-                    <td style={{ color: c.name ? "var(--text-primary)" : "var(--text-muted)", fontSize: 13 }}>
+                    <td style={{ color: c.name ? "var(--color-text-primary)" : "var(--color-text-muted)", fontSize: 13 }}>
                       {c.name || "-"}
                     </td>
                     <td><span className={`badge ${c.role === "admin" ? "badge-used" : "badge-available"}`}>{c.role}</span></td>
-                    <td><span className="text-mono" style={{ fontSize: 12, letterSpacing: 1 }}>{c.productKey || <span style={{ color: "var(--text-muted)" }}>-</span>}</span></td>
+                    <td><span className="text-mono" style={{ fontSize: 12, letterSpacing: 1 }}>{c.productKey || <span style={{ color: "var(--color-text-muted)" }}>-</span>}</span></td>
                     <td>
                       {c.keyStatus ? (
                         <span className={`badge badge-${c.keyStatus}`}>{c.keyStatus}</span>
-                      ) : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>-</span>}
+                      ) : <span style={{ color: "var(--color-text-muted)", fontSize: 12 }}>-</span>}
                     </td>
                     <td style={{ fontSize: 12, whiteSpace: "nowrap" }}>{new Date(c.createdAt).toLocaleDateString()}</td>
                     <td>
                       <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 10px" }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedId(c.id); }}
-                      >
-                        Manage
+                        onClick={(e) => { e.stopPropagation(); openDetail(c); }}>
+                        View
                       </button>
                     </td>
                   </tr>
@@ -99,12 +110,91 @@ export function CustomersPage() {
         )}
       </div>
 
-      {selectedId && (
-        <CustomerModal
-          customerId={selectedId}
-          onClose={() => setSelectedId(null)}
-          onUpdated={() => { setSelectedId(null); fetchCustomers(); }}
-        />
+      {detailCustomer && (
+        <>
+          <div className="drawer-overlay" onClick={() => setDetailCustomer(null)} />
+          <div className="drawer-panel">
+            <div className="drawer-header">
+              <h3>Customer Profile</h3>
+              <button className="modal-close" onClick={() => setDetailCustomer(null)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="drawer-body">
+              <div className="customer-profile-header">
+                <div className="customer-profile-avatar">
+                  {detailCustomer.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="customer-profile-info">
+                  <div className="name">{detailCustomer.name || "—"}</div>
+                  <div className="email">{detailCustomer.email}</div>
+                </div>
+              </div>
+
+              <div className="customer-info-grid">
+                <span className="lbl">Role</span>
+                <span className="val"><span className={`badge ${detailCustomer.role === "admin" ? "badge-used" : "badge-available"}`} style={{ fontSize: 10 }}>{detailCustomer.role}</span></span>
+
+                <span className="lbl">Key</span>
+                <span className="val text-mono" style={{ fontSize: 12, letterSpacing: 1 }}>{detailCustomer.productKey || "-"}</span>
+
+                <span className="lbl">Key Status</span>
+                <span className="val">{detailCustomer.keyStatus ? <span className={`badge badge-${detailCustomer.keyStatus}`} style={{ fontSize: 10 }}>{detailCustomer.keyStatus}</span> : "-"}</span>
+
+                <span className="lbl">Registered</span>
+                <span className="val">{new Date(detailCustomer.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}</span>
+
+                <span className="lbl">Notes</span>
+                <span className="val" style={{ color: detailCustomer.notes ? "var(--color-text-primary)" : "var(--color-text-muted)" }}>{detailCustomer.notes || "-"}</span>
+              </div>
+
+              {detailCustomer.keys.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div className="section-title" style={{ marginBottom: 10 }}>All Keys ({detailCustomer.keys.length})</div>
+                  <div className="customer-history">
+                    {detailCustomer.keys.map((k) => (
+                      <div key={k.id} className="customer-history-item">
+                        <div className={`customer-history-dot ${k.status === "used" ? "success" : "accent"}`} />
+                        <div className="customer-history-content">
+                          <div className="desc">
+                            <span className={`badge badge-${k.status}`} style={{ fontSize: 9, marginRight: 6 }}>{k.status}</span>
+                            <span className="text-mono" style={{ fontSize: 12, letterSpacing: 1 }}>{k.key}</span>
+                          </div>
+                          <div className="time">{new Date(k.createdAt).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {loadingDetail ? (
+                <div style={{ textAlign: "center", padding: 20 }}>
+                  <div style={{ width: 20, height: 20, border: "2px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite", display: "inline-block" }} />
+                </div>
+              ) : customerEmailLogs.length > 0 ? (
+                <div>
+                  <div className="section-title" style={{ marginBottom: 10 }}>Email History ({customerEmailLogs.length})</div>
+                  <div className="customer-history">
+                    {customerEmailLogs.map((log) => (
+                      <div key={log.id} className="customer-history-item">
+                        <div className={`customer-history-dot ${log.status === "sent" ? "success" : "accent"}`} />
+                        <div className="customer-history-content">
+                          <div className="desc">
+                            <span className={`badge ${log.status === "sent" ? "badge-available" : "badge-expired"}`} style={{ fontSize: 9, marginRight: 6 }}>{log.status}</span>
+                            {log.subject}
+                          </div>
+                          <div className="time">{new Date(log.sentAt).toLocaleString()}</div>
+                          {log.error && <div className="time" style={{ color: "var(--color-danger)" }}>{log.error}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

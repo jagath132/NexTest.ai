@@ -257,66 +257,123 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
       </div>
 
       {/* ── Nav ── */}
-      <nav className="sticky top-0 z-50" style={{ background: "var(--glass-bg)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--glass-border)" }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3 lg:px-10">
-          <Logo variant="wordmark" />
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a key={link.href} href={link.href}
-                className="text-sm font-medium transition-opacity hover:opacity-70 no-underline"
-                style={{ color: "var(--text-primary-landing)" }}
-              >
-                {link.label}
-              </a>
-            ))}
+      <nav className="sticky top-0 z-50"
+        style={{
+          background: theme === "dark" ? "rgba(10,14,23,0.8)" : "rgba(255,255,255,0.8)",
+          backdropFilter: "blur(16px) saturate(1.5)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.5)",
+          borderBottom: "1px solid var(--glass-border)",
+          boxShadow: theme === "dark" ? "0 1px 3px 0 rgba(0,0,0,0.2)" : "0 1px 3px 0 rgba(0,0,0,0.04)",
+          transition: "box-shadow 200ms ease-out",
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 h-14">
+          <div className="flex items-center gap-8">
+            <Logo variant="wordmark" />
+            <div className="hidden md:flex items-center gap-0.5">
+              {navLinks.map((link) => (
+                <a key={link.href} href={link.href}
+                  className="px-3.5 py-2 text-sm font-medium rounded-lg no-underline transition-all duration-150"
+                  style={{ color: "var(--text-muted-landing)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary-landing)"; e.currentTarget.style.background = theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted-landing)"; e.currentTarget.style.background = "transparent"; }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} type="button" className="h-9 w-9 flex items-center justify-center rounded-lg transition-all hover:opacity-80 cursor-pointer" style={{ background: "transparent", border: "1px solid var(--glass-border)", color: "var(--text-primary-landing)" }} aria-label="Toggle theme">
+          <div className="flex items-center gap-1.5">
+            <button onClick={toggleTheme} type="button"
+              className="flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer"
+              style={{ width: 34, height: 34, color: "var(--text-muted-landing)", background: "transparent", border: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary-landing)"; e.currentTarget.style.background = theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted-landing)"; e.currentTarget.style.background = "transparent"; }}
+              aria-label="Toggle theme"
+            >
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             {isAuthed ? (
-              <button onClick={onGetStarted} type="button" className="hidden sm:inline-flex text-sm font-semibold px-5 py-2 rounded-lg transition-all cursor-pointer" style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}>
-                Dashboard
+              <button onClick={onGetStarted} type="button"
+                className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+                style={{ color: "#fff", background: "var(--signal-green)", border: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+              >
+                Dashboard <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
               <>
-                <button onClick={onSignIn} type="button" className="hidden sm:inline-flex text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:opacity-80 cursor-pointer" style={{ color: "var(--text-primary-landing)", background: "transparent", border: "1px solid var(--glass-border)" }}>
+                <button onClick={onSignIn} type="button"
+                  className="hidden sm:inline-flex text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+                  style={{ color: "var(--text-muted-landing)", background: "transparent", border: "none" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary-landing)"; e.currentTarget.style.background = theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted-landing)"; e.currentTarget.style.background = "transparent"; }}
+                >
                   Sign In
                 </button>
-                <button onClick={onGetStarted} type="button" className="hidden sm:inline-flex text-sm font-semibold px-5 py-2 rounded-lg transition-all cursor-pointer" style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}>
-                  Get Started
+                <button onClick={onGetStarted} type="button"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+                  style={{ color: "#fff", background: "var(--signal-green)", border: "none" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+                >
+                  Get Started <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </>
             )}
-            <button onClick={() => setMobileOpen(!mobileOpen)} type="button" className="md:hidden h-9 w-9 flex items-center justify-center rounded-lg cursor-pointer" style={{ color: "var(--text-primary-landing)", background: "transparent", border: "none" }} aria-label="Menu">
+            <button onClick={() => setMobileOpen(!mobileOpen)} type="button"
+              className="md:hidden flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer"
+              style={{ width: 34, height: 34, color: "var(--text-muted-landing)", background: "transparent", border: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary-landing)"; e.currentTarget.style.background = theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted-landing)"; e.currentTarget.style.background = "transparent"; }}
+              aria-label="Menu"
+            >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
         {mobileOpen && (
-          <div className="md:hidden px-6 pb-4 space-y-2" style={{ background: "var(--glass-bg)" }}>
-            {navLinks.map((link) => (
-              <a key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
-                className="block text-sm font-medium py-2 no-underline"
-                style={{ color: "var(--text-primary-landing)" }}
-              >
-                {link.label}
-              </a>
-            ))}
-            {isAuthed ? (
-              <button onClick={onGetStarted} type="button" className="w-full text-sm font-semibold py-2 rounded-lg" style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}>
-                Dashboard
-              </button>
-            ) : (
-              <>
-                <button onClick={onSignIn} type="button" className="w-full text-sm font-semibold py-2 rounded-lg" style={{ color: "var(--text-primary-landing)", background: "transparent", border: "1px solid var(--glass-border)" }}>
-                  Sign In
+          <div className="md:hidden border-t animate-fade-in" style={{ borderColor: "var(--glass-border)" }}>
+            <div className="px-6 py-4 space-y-1">
+              {navLinks.map((link) => (
+                <a key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
+                  className="block text-sm font-medium px-3 py-2.5 rounded-lg no-underline transition-all duration-150"
+                  style={{ color: "var(--text-muted-landing)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary-landing)"; e.currentTarget.style.background = theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted-landing)"; e.currentTarget.style.background = "transparent"; }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+            <div className="px-6 pb-4 space-y-2">
+              {isAuthed ? (
+                <button onClick={onGetStarted} type="button"
+                  className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold py-2.5 rounded-lg transition-all duration-150"
+                  style={{ color: "#fff", background: "var(--signal-green)", border: "none" }}
+                >
+                  Dashboard <ArrowRight className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={onGetStarted} type="button" className="w-full text-sm font-semibold py-2 rounded-lg" style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}>
-                  Get Started
-                </button>
-              </>
-            )}
+              ) : (
+                <>
+                  <button onClick={onSignIn} type="button"
+                    className="w-full text-sm font-medium py-2.5 rounded-lg transition-all duration-150"
+                    style={{ color: "var(--text-muted-landing)", background: "transparent", border: "1px solid var(--glass-border)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary-landing)"; e.currentTarget.style.borderColor = "var(--text-muted-landing)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted-landing)"; e.currentTarget.style.borderColor = "var(--glass-border)"; }}
+                  >
+                    Sign In
+                  </button>
+                  <button onClick={onGetStarted} type="button"
+                    className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold py-2.5 rounded-lg transition-all duration-150"
+                    style={{ color: "#fff", background: "var(--signal-green)", border: "none" }}
+                  >
+                    Get Started <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </nav>
@@ -326,7 +383,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
         <div className="grid lg:grid-cols-[1fr_1fr] gap-12 lg:gap-16 items-center">
           <div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight" style={{ color: "var(--text-primary-landing)", fontFamily: "var(--font-display)" }}>
-              Ship with <span className="gradient-text-rainbow">confidence</span>
+              <span className="gradient-shift">Ship with confidence</span>
             </h1>
             <p className="mt-4 text-lg max-w-lg leading-relaxed" style={{ color: "var(--text-muted-landing)" }}>
               Turn product requirements into structured test cases and executable scripts — powered by the AI provider you already trust.
@@ -382,10 +439,10 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-3 gap-5 lg:gap-8">
+        <div className="grid md:grid-cols-3 gap-5 lg:gap-8 items-stretch">
           {PIPELINE_STAGES.map((stage, i) => (
             <ScrollReveal key={stage.step} delay={i * 150}>
-              <div className="glass-panel-new rounded-xl p-6 lg:p-8 h-full transition-all duration-200 hover:border-opacity-40" style={{ borderColor: "var(--glass-border)" }}>
+              <div className="glass-panel-new rounded-xl p-6 lg:p-8 h-full flex flex-col transition-all duration-200 hover:border-opacity-40" style={{ borderColor: "var(--glass-border)" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-xs font-mono font-bold" style={{ color: "var(--signal-green)" }}>{stage.step}</span>
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: "rgba(47,214,117,0.1)" }}>
@@ -393,17 +450,17 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
                   </div>
                 </div>
                 <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary-landing)", fontFamily: "var(--font-display)" }}>{stage.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted-landing)" }}>{stage.desc}</p>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: "var(--text-muted-landing)" }}>{stage.desc}</p>
               </div>
             </ScrollReveal>
           ))}
         </div>
 
         {/* Secondary features */}
-        <div className="grid sm:grid-cols-3 gap-5 mt-8">
+        <div className="grid sm:grid-cols-3 gap-5 mt-8 items-stretch">
           {SECONDARY_FEATURES.map((f, i) => (
             <ScrollReveal key={f.title} delay={(i + 3) * 150}>
-              <div className="flex items-start gap-3 p-4 rounded-lg" style={{ background: "var(--bg-elevated)" }}>
+              <div className="flex items-start gap-3 p-4 rounded-lg h-full" style={{ background: "var(--bg-elevated)" }}>
                 <f.icon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "var(--text-muted-landing)" }} />
                 <div>
                   <h4 className="text-sm font-semibold" style={{ color: "var(--text-primary-landing)" }}>{f.title}</h4>
@@ -429,7 +486,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
             </h2>
           </div>
         </ScrollReveal>
-        <div className="grid md:grid-cols-3 gap-5 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-5 lg:gap-8 max-w-5xl mx-auto items-stretch">
           {PRICING_TIERS.map((tier, i) => (
             <ScrollReveal key={tier.name} delay={i * 150}>
               <div className={`rounded-xl p-6 lg:p-8 flex flex-col ${tier.highlighted ? "relative" : ""}`}
@@ -457,11 +514,11 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
                     </li>
                   ))}
                 </ul>
-                <button onClick={onGetStarted} type="button" className="mt-8 w-full py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer"
+                <button onClick={onGetStarted} type="button" className="mt-8 w-full py-3 text-sm font-semibold rounded-lg transition-all cursor-pointer"
                   style={{
-                    color: tier.highlighted ? "var(--bg-base)" : "var(--text-primary-landing)",
-                    background: tier.highlighted ? "var(--text-primary-landing)" : "transparent",
-                    border: tier.highlighted ? "none" : "1px solid var(--glass-border)",
+                    color: tier.highlighted ? "var(--bg-base)" : "var(--signal-green)",
+                    background: tier.highlighted ? "var(--signal-green)" : "transparent",
+                    border: tier.highlighted ? "none" : "1px solid var(--signal-green)",
                   }}
                 >
                   {isAuthed && tier.name !== "Enterprise" ? "Dashboard" : tier.cta}
@@ -487,38 +544,10 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
         <FaqAccordion items={FAQ_ITEMS} />
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-10" style={{ paddingBottom: "var(--section-spacing)" }}>
-        <ScrollReveal>
-          <div className="glass-panel-new rounded-2xl p-10 lg:p-16 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold" style={{ color: "var(--text-primary-landing)", fontFamily: "var(--font-display)" }}>
-              Ready to ship with confidence?
-            </h2>
-            <p className="mt-3 text-base max-w-lg mx-auto" style={{ color: "var(--text-muted-landing)" }}>
-              Start your free trial — no credit card required. Set up in under 2 minutes.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3 mt-8">
-              {isAuthed ? (
-                <button onClick={onGetStarted} type="button" className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-lg transition-all cursor-pointer" style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}>
-                  Dashboard <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <>
-                  <button onClick={onGetStarted} type="button" className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-lg transition-all cursor-pointer" style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}>
-                    Get Started <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button onClick={onSignIn} type="button" className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-lg transition-all cursor-pointer" style={{ color: "var(--text-primary-landing)", background: "transparent", border: "1px solid var(--glass-border)" }}>
-                    Sign In
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
+
 
       {/* ── Contact form ── */}
-      <section className="max-w-3xl mx-auto px-6 lg:px-10" style={{ paddingBottom: "var(--section-spacing)" }}>
+      <section className="max-w-5xl mx-auto px-6 lg:px-10" style={{ paddingBottom: "var(--section-spacing)" }}>
         <ScrollReveal>
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold" style={{ background: "rgba(47,214,117,0.1)", color: "var(--signal-green)", border: "1px solid rgba(47,214,117,0.2)" }}>
@@ -535,7 +564,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
 
         <ScrollReveal>
           {supportSent ? (
-            <div className="glass-panel-new rounded-2xl p-12 text-center">
+            <div className="glass-panel-new rounded-2xl p-12 text-center max-w-lg mx-auto">
               <div className="flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5" style={{ background: "rgba(47,214,117,0.1)" }}>
                 <Check className="w-8 h-8" style={{ color: "var(--signal-green)" }} />
               </div>
@@ -543,78 +572,108 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
               <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: "var(--text-muted-landing)" }}>Thank you for reaching out. Our team will respond within 24 hours.</p>
             </div>
           ) : (
-            <form onSubmit={handleSupportSubmit} className="glass-panel-new rounded-2xl p-8 sm:p-10 space-y-5">
-              <div className="grid sm:grid-cols-2 gap-5">
+            <div className="grid md:grid-cols-[1fr_1.2fr] gap-8 lg:gap-12 items-start">
+              <div className="space-y-6">
                 <div>
-                  <label htmlFor="support-name" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Name</label>
-                  <input id="support-name" type="text" required value={supportForm.name} onChange={(e) => setSupportForm((p) => ({ ...p, name: e.target.value }))} placeholder="Your name"
-                    className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
-                    style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: supportErrors.name ? "2px solid var(--signal-amber)" : "2px solid var(--glass-border)" }}
-                    onFocus={(e) => { if (!supportErrors.name) e.target.style.borderColor = "var(--signal-green)"; }}
-                    onBlur={(e) => { if (!supportErrors.name) e.target.style.borderColor = "var(--glass-border)"; }}
-                  />
-                  {supportErrors.name && <p className="mt-1 text-xs" style={{ color: "var(--signal-amber)" }}>{supportErrors.name}</p>}
+                  <h3 className="text-xl font-bold" style={{ color: "var(--text-primary-landing)", fontFamily: "var(--font-display)" }}>Let's talk</h3>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text-muted-landing)" }}>
+                    Fill in the details and we'll get back to you within 24 hours.
+                  </p>
                 </div>
-                <div>
-                  <label htmlFor="support-email" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Email</label>
-                  <input id="support-email" type="email" required value={supportForm.email} onChange={(e) => setSupportForm((p) => ({ ...p, email: e.target.value }))} placeholder="you@company.com"
-                    className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
-                    style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: supportErrors.email ? "2px solid var(--signal-amber)" : "2px solid var(--glass-border)" }}
-                    onFocus={(e) => { if (!supportErrors.email) e.target.style.borderColor = "var(--signal-green)"; }}
-                    onBlur={(e) => { if (!supportErrors.email) e.target.style.borderColor = "var(--glass-border)"; }}
-                  />
-                  {supportErrors.email && <p className="mt-1 text-xs" style={{ color: "var(--signal-amber)" }}>{supportErrors.email}</p>}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0" style={{ background: "rgba(47,214,117,0.1)" }}>
+                      <MessageSquare className="w-4 h-4" style={{ color: "var(--signal-green)" }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text-primary-landing)" }}>Email us</p>
+                      <p className="text-xs" style={{ color: "var(--text-muted-landing)" }}>hello@nextest.app</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0" style={{ background: "rgba(47,214,117,0.1)" }}>
+                      <svg className="w-4 h-4" style={{ color: "var(--signal-green)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" /></svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text-primary-landing)" }}>Response time</p>
+                      <p className="text-xs" style={{ color: "var(--text-muted-landing)" }}>Typically within 24 hours</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label htmlFor="support-subject" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Subject</label>
-                <select id="support-subject" value={supportForm.subject} onChange={(e) => setSupportForm((p) => ({ ...p, subject: e.target.value }))}
-                  className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
-                  style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: "2px solid var(--glass-border)" }}
-                  onFocus={(e) => { e.target.style.borderColor = "var(--signal-green)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "var(--glass-border)"; }}
-                >
-                  <option value="Technical Support">Technical Support</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Billing">Billing</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              {supportForm.subject === "Other" && (
+              <form onSubmit={handleSupportSubmit} className="glass-panel-new rounded-2xl p-6 sm:p-8 space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="support-name" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Name</label>
+                    <input id="support-name" type="text" required value={supportForm.name} onChange={(e) => setSupportForm((p) => ({ ...p, name: e.target.value }))} placeholder="John Doe"
+                      className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
+                      style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: supportErrors.name ? "2px solid var(--signal-amber)" : "2px solid var(--glass-border)" }}
+                      onFocus={(e) => { if (!supportErrors.name) e.target.style.borderColor = "var(--signal-green)"; }}
+                      onBlur={(e) => { if (!supportErrors.name) e.target.style.borderColor = "var(--glass-border)"; }}
+                    />
+                    {supportErrors.name && <p className="mt-1 text-xs" style={{ color: "var(--signal-amber)" }}>{supportErrors.name}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="support-email" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Email</label>
+                    <input id="support-email" type="email" required value={supportForm.email} onChange={(e) => setSupportForm((p) => ({ ...p, email: e.target.value }))} placeholder="you@company.com"
+                      className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
+                      style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: supportErrors.email ? "2px solid var(--signal-amber)" : "2px solid var(--glass-border)" }}
+                      onFocus={(e) => { if (!supportErrors.email) e.target.style.borderColor = "var(--signal-green)"; }}
+                      onBlur={(e) => { if (!supportErrors.email) e.target.style.borderColor = "var(--glass-border)"; }}
+                    />
+                    {supportErrors.email && <p className="mt-1 text-xs" style={{ color: "var(--signal-amber)" }}>{supportErrors.email}</p>}
+                  </div>
+                </div>
                 <div>
-                  <label htmlFor="support-subject-text" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Subject (free text)</label>
-                  <input id="support-subject-text" type="text" required value={supportForm.message.split(" ").slice(0, 8).join(" ")} onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))} placeholder="Brief subject line"
+                  <label htmlFor="support-subject" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Subject</label>
+                  <select id="support-subject" value={supportForm.subject} onChange={(e) => setSupportForm((p) => ({ ...p, subject: e.target.value }))}
                     className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
                     style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: "2px solid var(--glass-border)" }}
                     onFocus={(e) => { e.target.style.borderColor = "var(--signal-green)"; }}
                     onBlur={(e) => { e.target.style.borderColor = "var(--glass-border)"; }}
-                  />
+                  >
+                    <option value="Technical Support">Technical Support</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Billing">Billing</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
-              )}
-              <div>
-                <label htmlFor="support-message" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Message</label>
-                <textarea id="support-message" required rows={4} value={supportForm.message} onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))} placeholder="Describe your issue in detail..."
-                  className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg resize-y"
-                  style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: supportErrors.message ? "2px solid var(--signal-amber)" : "2px solid var(--glass-border)" }}
-                  onFocus={(e) => { if (!supportErrors.message) e.target.style.borderColor = "var(--signal-green)"; }}
-                  onBlur={(e) => { if (!supportErrors.message) e.target.style.borderColor = "var(--glass-border)"; }}
-                />
-                <div className="flex justify-between mt-1">
-                  {supportErrors.message ? <p className="text-xs" style={{ color: "var(--signal-amber)" }}>{supportErrors.message}</p> : <span />}
-                  <span className="text-xs" style={{ color: "var(--text-muted-landing)" }}>{supportForm.message.length}/2000</span>
-                </div>
-              </div>
-              <button type="submit" disabled={supportSending}
-                className="w-full py-3 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                style={{ color: "var(--bg-base)", background: "var(--text-primary-landing)", border: "none" }}
-              >
-                {supportSending ? (
-                  <span className="h-4 w-4 rounded-full border-2 border-[var(--bg-base)] border-t-transparent animate-spin" />
-                ) : (
-                  "Send Message"
+                {supportForm.subject === "Other" && (
+                  <div>
+                    <label htmlFor="support-subject-text" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Subject (free text)</label>
+                    <input id="support-subject-text" type="text" required value={supportForm.message.split(" ").slice(0, 8).join(" ")} onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))} placeholder="Brief subject line"
+                      className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg"
+                      style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: "2px solid var(--glass-border)" }}
+                      onFocus={(e) => { e.target.style.borderColor = "var(--signal-green)"; }}
+                      onBlur={(e) => { e.target.style.borderColor = "var(--glass-border)"; }}
+                    />
+                  </div>
                 )}
-              </button>
-            </form>
+                <div>
+                  <label htmlFor="support-message" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted-landing)" }}>Message</label>
+                  <textarea id="support-message" required rows={4} value={supportForm.message} onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))} placeholder="Tell us more about your question or issue..."
+                    className="w-full text-sm outline-none transition-all px-4 py-2.5 rounded-lg resize-y"
+                    style={{ color: "var(--text-primary-landing)", background: "var(--bg-elevated)", border: supportErrors.message ? "2px solid var(--signal-amber)" : "2px solid var(--glass-border)" }}
+                    onFocus={(e) => { if (!supportErrors.message) e.target.style.borderColor = "var(--signal-green)"; }}
+                    onBlur={(e) => { if (!supportErrors.message) e.target.style.borderColor = "var(--glass-border)"; }}
+                  />
+                  <div className="flex justify-between mt-1">
+                    {supportErrors.message ? <p className="text-xs" style={{ color: "var(--signal-amber)" }}>{supportErrors.message}</p> : <span />}
+                    <span className="text-xs" style={{ color: "var(--text-muted-landing)" }}>{supportForm.message.length}/2000</span>
+                  </div>
+                </div>
+                <button type="submit" disabled={supportSending}
+                  className="w-full py-3 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  style={{ color: "var(--bg-base)", background: "var(--signal-green)", border: "none" }}
+                >
+                  {supportSending ? (
+                    <span className="h-4 w-4 rounded-full border-2 border-[var(--bg-base)] border-t-transparent animate-spin" />
+                  ) : (
+                    <><MessageSquare className="w-4 h-4" /> Send Message</>
+                  )}
+                </button>
+              </form>
+            </div>
           )}
         </ScrollReveal>
       </section>

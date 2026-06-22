@@ -133,7 +133,7 @@ async function handleLogin(req, res, body) {
 
   sendJson(res, 200, {
     token,
-    user: { id: userRecord._id.toString(), email: userRecord.email, name: userRecord.name || null, role: userRecord.role || "Member", createdAt: userRecord.createdAt },
+    user: { id: userRecord._id.toString(), email: userRecord.email, name: userRecord.name || null, role: userRecord.role || "Member", createdAt: userRecord.createdAt, has_seen_welcome: userRecord.has_seen_welcome || false },
   });
 }
 
@@ -194,9 +194,9 @@ async function handleResetPassword(req, res, body) {
 }
 
 async function handleChangePassword(req, res, url, body, user) {
-  const { currentPassword, newPassword } = body;
-  if (!currentPassword || !newPassword) {
-    sendJson(res, 400, { error: "Current password and new password are required." });
+  const { newPassword } = body;
+  if (!newPassword) {
+    sendJson(res, 400, { error: "New password is required." });
     return;
   }
   if (!PASSWORD_REGEX.test(newPassword)) {
@@ -204,7 +204,7 @@ async function handleChangePassword(req, res, url, body, user) {
     return;
   }
   try {
-    await authStore.changePassword(user.id, currentPassword, newPassword);
+    await authStore.resetUserPassword(user.id, newPassword);
     sendJson(res, 200, { message: "Password changed successfully." });
   } catch (err) {
     sendJson(res, 400, { error: err.message });
@@ -216,6 +216,12 @@ async function handleMe(req, res, url, body, user) {
   const twoFactor = await is2FAEnabled(user.id);
   const db = getDb();
   const userDoc = await db.collection("users").findOne({ _id: new (await import("mongodb")).ObjectId(user.id) }, { projection: { activeProvider: 1 } });
+  const db2 = getDb();
+  const fullUser = await db2.collection("users").findOne(
+    { _id: new (await import("mongodb")).ObjectId(user.id) },
+    { projection: { has_seen_welcome: 1 } }
+  );
+
   sendJson(res, 200, {
     user: {
       id: user.id,
@@ -227,8 +233,19 @@ async function handleMe(req, res, url, body, user) {
       subscriptionStatus: plan.subscriptionStatus,
       twoFactorEnabled: twoFactor,
       activeProvider: userDoc?.activeProvider || null,
+      has_seen_welcome: fullUser?.has_seen_welcome || false,
     },
   });
+}
+
+async function handleWelcomeSeen(req, res, url, body, user) {
+  const db = getDb();
+  const { ObjectId } = await import("mongodb");
+  await db.collection("users").updateOne(
+    { _id: new ObjectId(user.id) },
+    { $set: { has_seen_welcome: true } }
+  );
+  sendJson(res, 200, { ok: true });
 }
 
 async function handleSetup2FA(req, res, url, body, user) {
@@ -488,6 +505,14 @@ async function handleRegistrationStatus(req, res, body, url) {
   });
 }
 
+function handleLogout(req, res, _body) {
+  res.setHeader("Set-Cookie", [
+    `token=; HttpOnly; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+    `session=; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+  ]);
+  sendJson(res, 200, { ok: true });
+}
+
 async function handleCompleteRegistration(req, res, body) {
   const { email, productKey } = body;
   if (!email || !productKey) {
@@ -530,13 +555,36 @@ async function handleCompleteRegistration(req, res, body) {
 
   await db.collection("pending_registrations").deleteOne({ email: email.toLowerCase().trim() });
 
-  const token = generateToken(user);
-  setAuthCookie(res, token);
+  sendJson(res, 200, { ok: true });
+}
 
-  sendJson(res, 201, {
-    token,
-    user: { id: user.id, email: user.email, role: user.role, name: pending.name, createdAt: user.createdAt },
+async function handleDeleteAccount(req, res, url, body, user) {
+  const db = getDb();
+  const { ObjectId } = await import("mongodb");
+  const userDoc = await db.collection("users").findOne({ _id: new ObjectId(user.id) });
+  if (!userDoc) {
+    sendJson(res, 404, { error: "User not found." });
+    return;
+  }
+  const email = userDoc.email;
+  await db.collection("users").deleteOne({ _id: new ObjectId(user.id) });
+  await db.collection("user_data").deleteMany({ userId: user.id });
+  await db.collection("user_api_keys").deleteMany({ userId: user.id });
+  await db.collection("product_keys").updateMany(
+    { $or: [{ customerEmail: email }, { registeredEmail: email }] },
+    { $set: { status: "available", usedBy: null, usedAt: null, registeredEmail: null } }
+  );
+  await db.collection("deleted_users").insertOne({
+    originalId: user.id,
+    email: email,
+    name: userDoc.name || null,
+    deletedAt: new Date().toISOString(),
   });
+  res.setHeader("Set-Cookie", [
+    `token=; HttpOnly; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+    `session=; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+  ]);
+  sendJson(res, 200, { ok: true });
 }
 
 const ROUTE_CONFIG = [
@@ -544,8 +592,10 @@ const ROUTE_CONFIG = [
   { path: "/api/auth/validate-key", method: "POST", handler: handleValidateKey, auth: false },
   { path: "/api/auth/login", method: "POST", handler: handleLogin, auth: false },
   { path: "/api/auth/forgot-password", method: "POST", handler: handleForgotPassword, auth: false },
+  { path: "/api/auth/logout", method: "POST", handler: handleLogout, auth: false },
   { path: "/api/auth/reset-password", method: "POST", handler: handleResetPassword, auth: false },
   { path: "/api/auth/me", method: "GET", handler: handleMe, auth: true },
+  { path: "/api/auth/welcome-seen", method: "POST", handler: handleWelcomeSeen, auth: true },
   { path: "/api/auth/password", method: "PUT", handler: handleChangePassword, auth: true },
   { path: "/api/settings/api-keys", method: "GET", handler: handleGetApiKeys, auth: true },
   { path: "/api/settings/api-key", method: "POST", handler: handleSaveApiKey, auth: true },
@@ -556,6 +606,7 @@ const ROUTE_CONFIG = [
   { path: "/api/settings/active-provider", method: "PUT", handler: handleSetActiveProvider, auth: true },
   { path: "/api/settings/active-provider", method: "DELETE", handler: handleClearActiveProvider, auth: true },
   { path: "/api/user/billing", method: "GET", handler: handleGetBilling, auth: true },
+  { path: "/api/auth/delete-account", method: "POST", handler: handleDeleteAccount, auth: true },
   { path: "/api/auth/start-registration", method: "POST", handler: handleStartRegistration, auth: false },
   { path: "/api/auth/select-plan", method: "POST", handler: handleSelectPlan, auth: false },
   { path: "/api/auth/complete-payment", method: "POST", handler: handleCompletePayment, auth: false },

@@ -1,7 +1,7 @@
 import { connectDb } from "./db.js";
 import { adminStore, authenticateToken, handleAuthRoute, logAudit, getAuditLogs } from "./auth/index.js";
 import { KEY_ROUTES } from "./keys/routes.js";
-import { sendProductKeyEmail, getEmailLogs } from "./email/service.js";
+import { sendProductKeyEmail, getEmailLogs, resendEmail } from "./email/service.js";
 import { handleStripeWebhook } from "./payments/stripe.js";
 import { handleRazorpayWebhook } from "./payments/razorpay.js";
 
@@ -154,11 +154,34 @@ export function createApiMiddleware(env) {
         return;
       }
 
-      // Email log endpoint
+      // Email log endpoint (enhanced with filters + pagination)
       if (url.pathname === "/api/admin/email/logs" && req.method === "GET") {
-        const to = url.searchParams.get("to") || "";
-        const logs = await getEmailLogs({ to });
-        sendJson(res, 200, { logs });
+        const search = url.searchParams.get("search") || "";
+        const status = url.searchParams.get("status") || "all";
+        const dateFrom = url.searchParams.get("dateFrom") || "";
+        const dateTo = url.searchParams.get("dateTo") || "";
+        const page = url.searchParams.get("page") || "1";
+        const pageSize = url.searchParams.get("pageSize") || "50";
+        const result = await getEmailLogs({ search, status, dateFrom, dateTo, page, pageSize });
+        sendJson(res, 200, result);
+        return;
+      }
+
+      // Resend email
+      if (url.pathname === "/api/admin/email/resend" && req.method === "POST") {
+        const rawBody = await readRequestBody(req);
+        const { logId } = JSON.parse(rawBody || "{}");
+        if (!logId) {
+          sendJson(res, 400, { error: "logId is required." });
+          return;
+        }
+        try {
+          await resendEmail(logId);
+          await logAudit({ adminId: admin.id, adminEmail: admin.email, action: "resend_email", resource: "email", details: { logId }, ip: clientIp });
+          sendJson(res, 200, { ok: true });
+        } catch (err) {
+          sendJson(res, 500, { error: err.message });
+        }
         return;
       }
 
@@ -525,6 +548,26 @@ export function createApiMiddleware(env) {
         );
         await logAudit({ adminId: admin.id, adminEmail: admin.email, action: "reject_registration", resource: "pending_registration", resourceId: pendingId, details: { email: pending.email, reason }, ip: clientIp });
         sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      // Deleted users list
+      if (url.pathname === "/api/admin/deleted-users" && req.method === "GET") {
+        const { getDb } = await import("./db.js");
+        const docs = await getDb().collection("deleted_users")
+          .find({})
+          .sort({ deletedAt: -1 })
+          .limit(200)
+          .toArray();
+        sendJson(res, 200, {
+          deletedUsers: docs.map((d) => ({
+            id: d._id.toString(),
+            originalId: d.originalId,
+            email: d.email,
+            name: d.name,
+            deletedAt: d.deletedAt,
+          })),
+        });
         return;
       }
 

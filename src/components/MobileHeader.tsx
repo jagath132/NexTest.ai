@@ -5,7 +5,7 @@ export function MobileHeader() {
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
   return (
     <header className="flex items-center gap-3 px-4 py-3 border-b lg:hidden" style={{ background: "var(--bg-glass)", borderColor: "var(--border-default)", backdropFilter: "blur(12px)" }}>
-      <div style={{ width: 3, height: 24, borderRadius: 2, background: "var(--gradient-rainbow)", position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)" }} />
+      <div style={{ width: 3, height: 24, borderRadius: 2, background: "var(--accent)", position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)" }} />
       <button
         className="flex h-9 w-9 items-center justify-center rounded-lg btn-ghost"
         onClick={() => setSidebarOpen(true)}

@@ -132,7 +132,7 @@ export function AISettings() {
           <button type="button" disabled={saveDisabled} onClick={handleSaveProvider}
             className="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             style={{
-              background: saveDisabled ? "var(--bg-tertiary)" : "var(--gradient-rainbow)",
+              background: saveDisabled ? "var(--bg-tertiary)" : "var(--accent)",
               color: saveDisabled ? "var(--text-muted)" : "#fff",
               border: saveDisabled ? "1px solid var(--border-default)" : "none",
             }}

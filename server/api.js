@@ -238,12 +238,13 @@ export function createApiMiddleware(env) {
         }
         if (url.pathname === "/api/admin/stats" && req.method === "GET") {
           const db = getDb();
-          const [userCount, keyCount, usedKeys] = await Promise.all([
+          const [userCount, keyCount, usedKeys, deletedCount] = await Promise.all([
             db.collection("users").countDocuments(),
             db.collection("product_keys").countDocuments(),
             db.collection("product_keys").countDocuments({ status: "used" }),
+            db.collection("deleted_users").countDocuments(),
           ]);
-          sendJson(res, 200, { userCount, keyCount, usedKeys, availableKeys: keyCount - usedKeys });
+          sendJson(res, 200, { userCount, keyCount, usedKeys, availableKeys: keyCount - usedKeys, deletedCount });
           return;
         }
         if (url.pathname.match(/^\/api\/admin\/users\/([a-f0-9]+)$/) && req.method === "PUT") {

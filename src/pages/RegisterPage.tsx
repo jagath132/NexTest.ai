@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { api, type AuthResponse } from "../lib/api";
-import { useAppStore } from "../store/useAppStore";
+import { api } from "../lib/api";
 
 type Step = "info" | "plan" | "payment" | "pending_verification" | "verify_key";
 
@@ -11,50 +10,86 @@ type PlanData = {
   description: string; features: string[]; popular: boolean; active: boolean;
 };
 
-const STEP_LABELS: { key: Step; label: string; icon: string }[] = [
-  { key: "info", label: "Account", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
-  { key: "plan", label: "Plan", icon: "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" },
-  { key: "payment", label: "Payment", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
-  { key: "pending_verification", label: "Verification", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-  { key: "verify_key", label: "Activate", icon: "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" },
+const CONSOLE_LINES = [
+  "✓ setup pipeline .................. running",
+  "✓ environment ..................... 0.2s",
+  "✓ dependency check ................ ok",
+  "✓ test suite (12/12) .............. passed",
+  "✓ api contract .................... verified",
+  "✓ db connection ................... 4ms",
+  "✓ cache invalidation .............. ok",
+  "✓ auth middleware ................. passed",
+  "✓ rate limiter .................... 2ms",
+  "✓ input sanitization .............. clean",
+  "✓ response format ................. valid",
+  "✓ ssl handshake ................... 12ms",
+  "✓ csrf check ...................... passed",
+  "✓ cors policy ..................... valid",
+  "✓ session store ................... ok",
+  "✓ request validation .............. passed",
+  "✓ permission check ................ ok",
+  "✓ audit log ....................... written",
+  "✓ running suite (12/12) ........... ",
 ];
 
-function Field({ label, id, type, value, onChange, placeholder, icon, children }: {
-  label: string; id: string; type: string; value: string;
-  onChange: (v: string) => void; placeholder?: string; icon: React.ReactNode;
-  children?: React.ReactNode;
-}) {
-  const ref = useRef<HTMLInputElement | null>(null);
-  const [focused, setFocused] = useState(false);
-  const floating = focused || value.length > 0;
+function ConsoleFeed() {
+  const [displayed, setDisplayed] = useState<string[]>([]);
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDisplayed((prev) => {
+        const next = [...prev, CONSOLE_LINES[index]];
+        return next.length > 8 ? next.slice(-8) : next;
+      });
+      setIndex((i) => (i + 1) % CONSOLE_LINES.length);
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [index]);
 
   return (
-    <div className="relative">
-      <div className="relative rounded-xl transition-all duration-200"
-        style={{ background: "var(--bg-tertiary)", border: `1px solid ${focused ? "var(--accent)" : "var(--border-default)"}`, boxShadow: focused ? "0 0 0 3px var(--accent-soft)" : "none" }}
-        onClick={() => ref.current?.focus()}
-      >
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none" style={{ color: floating ? "var(--accent)" : "var(--text-muted)", transition: "color 0.2s" }}>
-          {icon}
+    <div className="relative" style={{ height: "14rem" }}>
+      {displayed.map((line, i) => (
+        <div key={`${i}-${line}`} className="animate-console-line text-sm leading-[1.75rem]" style={{ fontFamily: "var(--font-mono)", color: "var(--signal-green)", whiteSpace: "nowrap" }}>
+          {line}
         </div>
-        <input ref={ref} id={id} type={type} value={value} placeholder={floating ? placeholder : ""}
+      ))}
+    </div>
+  );
+}
+
+const STEP_ORDER: Step[] = ["info", "plan", "payment", "pending_verification", "verify_key"];
+
+const STEP_LABELS: Record<Step, string> = {
+  info: "Account details",
+  plan: "Choose a plan",
+  payment: "Payment",
+  pending_verification: "Verification",
+  verify_key: "Activate",
+};
+
+function UnderlineInput({ label, id, type, value, onChange, placeholder, className, autoComplete, children }: {
+  label: string; id: string; type: string; value: string;
+  onChange: (v: string) => void; placeholder?: string; className?: string; autoComplete?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>{label}</label>
+      <div className="relative">
+        <input id={id} type={type} required value={value} placeholder={placeholder} autoComplete={autoComplete}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          className="w-full bg-transparent outline-none pt-4 pb-1.5 pl-10 pr-3 text-sm" style={{ color: "var(--text-primary)" }}
-        />
-        <label htmlFor={id}
-          className="absolute left-10 pointer-events-none text-sm transition-all duration-200"
+          className="w-full text-sm outline-none transition-all pb-2 pt-0.5 pr-8"
           style={{
-            color: floating ? "var(--accent)" : "var(--text-muted)",
-            top: floating ? "0.3rem" : "50%",
-            fontSize: floating ? "0.7rem" : "0.875rem",
-            transform: floating ? "translateY(0)" : "translateY(-50%)",
-            transformOrigin: "left center",
+            color: "var(--ink)",
+            background: "transparent",
+            border: "none",
+            borderBottom: "2px solid var(--mist)",
+            fontFamily: "var(--font-sans)",
           }}
-        >
-          {label}
-        </label>
+          onFocus={(e) => { e.target.style.borderBottomColor = "var(--signal-green)"; }}
+          onBlur={(e) => { e.target.style.borderBottomColor = "var(--mist)"; }}
+        />
         {children}
       </div>
     </div>
@@ -64,9 +99,8 @@ function Field({ label, id, type, value, onChange, placeholder, icon, children }
 export function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
-  const setUser = useAppStore((s) => s.setUser);
-  const setSavedProviderKeys = useAppStore((s) => s.setSavedProviderKeys);
+
+
 
   const [step, setStep] = useState<Step>("info");
   const [name, setName] = useState("");
@@ -98,7 +132,6 @@ export function RegisterPage() {
     const pendingIdParam = searchParams.get("pendingId");
 
     if (emailParam) setEmail(emailParam);
-    if (keyParam) setProductKey(keyParam);
     if (pendingIdParam) setPendingId(pendingIdParam);
     if (stepParam === "verify_key" || keyParam) {
       setStep("verify_key");
@@ -128,7 +161,6 @@ export function RegisterPage() {
           `/api/auth/registration-status?email=${encodeURIComponent(email)}`
         );
         if (res.data.status === "ready" && res.data.productKey) {
-          setProductKey(res.data.productKey);
           setStep("verify_key");
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
@@ -217,13 +249,8 @@ export function RegisterPage() {
     setError("");
     setIsLoading(true);
     try {
-      const res = await api.post<AuthResponse>("/api/auth/complete-registration", { email, productKey });
-      setUser(res.data.user);
-      try {
-        const keysRes = await api.get<{ keys: Record<string, boolean> }>("/api/settings/api-keys");
-        setSavedProviderKeys(keysRes.data.keys ?? {});
-      } catch { /* ignore */ }
-      navigate("/dashboard");
+      await api.post("/api/auth/complete-registration", { email, productKey });
+      navigate("/auth");
     } catch (err) {
       setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to complete registration with this key.");
     } finally {
@@ -240,108 +267,86 @@ export function RegisterPage() {
     return groups.join("-");
   };
 
-  const currentStepIdx = STEP_LABELS.findIndex((s) => s.key === step);
-  const selectedPlanObj = plans.find((p) => p.id === selectedPlan);
-  const isFreePlan = selectedPlanObj ? selectedPlanObj.price === 0 : false;
+  const isFreePlan = (() => {
+    const planObj = plans.find((p) => p.id === selectedPlan);
+    return planObj ? planObj.price === 0 : false;
+  })();
+
+  const visibleSteps = (() => {
+    if (isFreePlan) return ["info", "plan", "pending_verification", "verify_key"] as Step[];
+    return STEP_ORDER;
+  })();
+
+  const currentStepIdx = visibleSteps.indexOf(step);
+  const totalSteps = visibleSteps.length;
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 py-8 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
-      <div className="absolute top-[-20%] left-[-10%] h-[500px] w-[500px] sm:h-[700px] sm:w-[700px] rounded-full opacity-[0.05] pointer-events-none" style={{ background: "radial-gradient(circle, var(--accent-violet), transparent)", filter: "blur(120px)" }} />
-      <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] sm:h-[700px] sm:w-[700px] rounded-full opacity-[0.04] pointer-events-none" style={{ background: "radial-gradient(circle, var(--accent-cyan), transparent)", filter: "blur(120px)" }} />
-
-      <div className="relative w-full" style={{ maxWidth: step === "plan" ? 820 : step === "payment" ? 520 : 480 }}>
-
-        {/* Back to Home */}
-        <button onClick={() => navigate("/")} type="button"
-          className="flex items-center gap-1.5 text-xs font-semibold mb-5 transition-all hover:gap-2"
-          style={{ color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: "6px 0" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Back to Home
-        </button>
-
-        {/* Steps indicator */}
-        <div className="flex items-center mb-8 overflow-x-auto py-1">
-          {STEP_LABELS.map((s, i) => {
-            const active = step === s.key;
-            const done = currentStepIdx > i;
-            if (s.key === "payment" && isFreePlan) return null;
-
-            return (
-              <div key={s.key} className="flex items-center shrink-0">
-                <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300"
-                  style={{
-                    background: active ? "var(--accent-soft)" : "transparent",
-                  }}
-                >
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold transition-all duration-300"
-                    style={{
-                      background: done ? "var(--success)" : active ? "var(--accent)" : "var(--bg-tertiary)",
-                      color: active || done ? "#fff" : "var(--text-muted)",
-                    }}
-                  >
-                    {done ? (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-xs font-semibold hidden sm:inline transition-colors duration-300"
-                    style={{ color: active ? "var(--accent)" : done ? "var(--success)" : "var(--text-muted)" }}
-                  >
-                    {s.label}
-                  </span>
-                </div>
-                {i < STEP_LABELS.length - 1 && !(s.key === "plan" && isFreePlan) && (
-                  <div className="w-4 sm:w-8 h-px mx-1 transition-colors duration-300" style={{ background: done ? "var(--success)" : "var(--border-default)" }} />
-                )}
-              </div>
-            );
-          })}
+    <div className="flex min-h-screen" style={{ background: "var(--paper)" }}>
+      {/* Left panel — branding + console feed */}
+      <div className="hidden md:flex md:w-[55%] flex-col relative overflow-hidden" style={{ background: "var(--ink)" }}>
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 px-10 pt-10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style={{ background: "var(--signal-green)" }}>
+            <svg className="h-5 w-5 text-[var(--ink)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 12l4 4 8-8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span className="text-sm font-bold" style={{ color: "var(--paper)", fontFamily: "var(--font-sans)" }}>NexTest</span>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl p-6 sm:p-8 animate-fade-in border"
-          style={{
-            background: "var(--bg-glass)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderColor: "var(--border-default)",
-            boxShadow: "0 12px 50px rgba(0,0,0,0.35)"
-          }}
-        >
-          {/* Header */}
-          <div className="flex flex-col items-center mb-7 text-center">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl mb-4" style={{ background: "var(--accent-gradient)", boxShadow: "0 0 20px rgba(99,102,241,0.25)" }}>
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2 3L22 3L22 14L12 22L2 14Z" />
-                <path d="M18 5 L12 11" strokeWidth="2" />
-              </svg>
+        {/* Headline */}
+        <div className="flex-1 flex flex-col justify-center px-10">
+          <h1 className="text-5xl font-bold tracking-tight leading-[1.1] mb-3 gradient-shift" style={{ fontFamily: "var(--font-sans)" }}>
+            Create your<br />account
+          </h1>
+          <p className="text-base max-w-sm" style={{ color: "rgba(247,248,246,0.55)", fontFamily: "var(--font-sans)" }}>
+            Set up your team in minutes and start shipping with confidence.
+          </p>
+
+          {/* Console feed */}
+          <div className="mt-12" style={{ fontFamily: "var(--font-mono)" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-block w-2 h-2 rounded-full" style={{ background: "var(--signal-green)" }} />
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(47,214,117,0.5)" }}>Setup Runner</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-              {step === "info" && "Create your account"}
-              {step === "plan" && "Choose your plan"}
-              {step === "payment" && "Confirm payment"}
-              {step === "pending_verification" && "Verification in progress"}
-              {step === "verify_key" && "Activate your account"}
-            </h1>
-            <p className="text-xs sm:text-sm mt-1.5 max-w-xs" style={{ color: "var(--text-muted)" }}>
-              {step === "info" && "Enter your details to get started with NexTest."}
-              {step === "plan" && "Select a plan tailored to your team. Upgrade anytime."}
-              {step === "payment" && `Subscribe to the ${selectedPlan?.toUpperCase()} tier to continue.`}
-              {step === "pending_verification" && "Waiting for License Manager verification."}
-              {step === "verify_key" && "Enter the product key sent to your email."}
-            </p>
+            <div className="rounded-xl p-5" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <ConsoleFeed />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom subtle branding */}
+        <div className="px-10 pb-8">
+          <p className="text-xs" style={{ color: "rgba(247,248,246,0.2)", fontFamily: "var(--font-mono)" }}>
+            $ nex setup —team={email || "team"} —reporter=spec
+          </p>
+        </div>
+      </div>
+
+      {/* Right panel — registration form */}
+      <div className="w-full md:w-[45%] flex items-center justify-center px-6 py-10 md:py-0" style={{ background: "var(--paper)" }}>
+        <div className="w-full max-w-sm">
+          {/* Toggle */}
+          <div className="flex p-0.5 mb-8 rounded-lg" style={{ background: "var(--mist)", border: "1px solid var(--mist)" }}>
+            {(["register", "login"] as const).map((t) => (
+              <button key={t} type="button"
+                onClick={() => t === "login" ? navigate("/auth") : undefined}
+                className="flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-200 cursor-pointer"
+                style={{
+                  background: t === "register" ? "var(--ink)" : "transparent",
+                  color: t === "register" ? "var(--paper)" : "var(--graphite)",
+                }}
+              >
+                {t === "login" ? "Sign In" : "Create Account"}
+              </button>
+            ))}
           </div>
 
+          {/* Error */}
           {error && (
-            <div className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm animate-shake" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid color-mix(in srgb, var(--danger) 25%, transparent)" }}>
+            <div className="mb-5 flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm"
+              style={{ background: "rgba(239,68,68,0.08)", color: "var(--danger)", border: "1px solid rgba(239,68,68,0.2)" }}
+            >
               <svg className="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -349,37 +354,46 @@ export function RegisterPage() {
             </div>
           )}
 
+          {/* Step progress */}
+          {step !== "pending_verification" && (
+            <div className="mb-8">
+              <div className="flex items-baseline justify-between mb-2">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--graphite)" }}>
+                  Step {currentStepIdx + 1} of {totalSteps}
+                </span>
+                <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{STEP_LABELS[step]}</span>
+              </div>
+              <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "var(--mist)" }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${((currentStepIdx + 1) / totalSteps) * 100}%`, background: "var(--signal-green)" }} />
+              </div>
+            </div>
+          )}
+
           {/* STEP 1: ACCOUNT INFO */}
           {step === "info" && (
-            <form onSubmit={handleInfoSubmit} className="space-y-4">
-              <Field label="Full Name" id="name" type="text" value={name} onChange={setName} placeholder="John Doe"
-                icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>}
-              />
-              <Field label="Email address" id="email" type="email" value={email} onChange={setEmail} placeholder="name@company.com"
-                icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>}
-              />
-              <Field label="Password" id="password" type={showPassword ? "text" : "password"} value={password} onChange={setPassword} placeholder="Create a password"
-                icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>}
-              >
+            <form onSubmit={handleInfoSubmit} autoComplete="off" className="space-y-5">
+              <UnderlineInput label="Full Name" id="reg_name" type="text" value={name} onChange={setName} placeholder="John Doe" />
+              <UnderlineInput label="Email address" id="reg_email" type="email" value={email} onChange={setEmail} placeholder="name@company.com" />
+              <UnderlineInput label="Password" id="reg_password" type={showPassword ? "text" : "password"} value={password} onChange={setPassword} placeholder="Create a password" autoComplete="new-password">
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" style={{ color: "var(--text-muted)" }}
+                  className="absolute right-0 top-0 cursor-pointer" style={{ color: "var(--graphite)" }}
                 >
                   {showPassword ? (
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                     </svg>
                   ) : (
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   )}
                 </button>
-              </Field>
+              </UnderlineInput>
 
               {password.length > 0 && (
-                <div className="flex items-center gap-3 px-1">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg-tertiary)" }}>
+                <div className="flex items-center gap-3 px-0.5">
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--mist)" }}>
                     <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(strength.score / 5) * 100}%`, background: colorScale[strength.score] }} />
                   </div>
                   <span className="text-xs font-semibold shrink-0" style={{ color: colorScale[strength.score] }}>{strength.label}</span>
@@ -387,11 +401,11 @@ export function RegisterPage() {
               )}
 
               <button type="submit" disabled={isLoading || strength.score < 2}
-                className="btn-primary w-full py-3 text-sm font-semibold flex items-center justify-center gap-2 rounded-xl transition-all"
-                style={{ background: "var(--gradient-rainbow)" }}
+                className="w-full py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
               >
                 {isLoading ? (
-                  <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <span className="h-4 w-4 rounded-full border-2 border-[var(--paper)] border-t-transparent animate-spin" />
                 ) : (
                   <>Continue <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" /></svg></>
                 )}
@@ -401,162 +415,169 @@ export function RegisterPage() {
 
           {/* STEP 2: PLANS */}
           {step === "plan" && (
-            <div className="space-y-6">
+            <div className="space-y-5 animate-fade-in">
               {plansLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <span className="h-6 w-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
+                  <span className="h-6 w-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--ink)", borderTopColor: "transparent" }} />
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-3">
                   {plans.map((plan) => {
                     const active = selectedPlan === plan.id;
                     const displayPrice = plan.price === 0 ? "$0" : "$" + (plan.price / 100);
                     const displayPeriod = plan.period === "forever" ? "forever" : "/" + (plan.period === "monthly" ? "month" : plan.period === "yearly" ? "year" : plan.period);
                     return (
                       <div key={plan.id}
-                        className="relative flex flex-col rounded-xl border-2 cursor-pointer transition-all duration-300 hover:-translate-y-0.5"
+                        className="relative rounded-lg cursor-pointer transition-all duration-200 p-4"
                         style={{
-                          background: active ? "var(--accent-soft)" : "var(--bg-card-hover)",
-                          borderColor: active ? "var(--accent)" : "var(--border-default)",
-                          boxShadow: active ? "0 0 24px rgba(99,102,241,0.15)" : "none",
-                          opacity: isLoading && !active ? 0.5 : 1,
+                          background: active ? "rgba(47,214,117,0.06)" : "transparent",
+                          border: `1px solid ${active ? "var(--signal-green)" : "var(--mist)"}`,
                         }}
                         onClick={() => handlePlanSelect(plan.id)}
                       >
                         {plan.popular && (
-                          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest whitespace-nowrap z-10" style={{ background: "var(--gradient-rainbow)", color: "#fff" }}>
+                          <div className="absolute -top-2.5 right-3 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest" style={{ background: "var(--signal-green)", color: "var(--ink)" }}>
                             Most Popular
                           </div>
                         )}
-                        <div className="p-5 flex flex-col flex-1">
-                          <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>{plan.name}</h3>
-                          <div className="mt-2 flex items-baseline gap-0.5">
-                            <span className="text-2xl font-extrabold" style={{ color: "var(--text-primary)" }}>{displayPrice}</span>
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>{displayPeriod}</span>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-sm font-bold" style={{ color: "var(--ink)" }}>{plan.name}</h3>
+                            <div className="mt-1 flex items-baseline gap-0.5">
+                              <span className="text-xl font-extrabold" style={{ color: "var(--ink)" }}>{displayPrice}</span>
+                              <span className="text-xs" style={{ color: "var(--graphite)" }}>{displayPeriod}</span>
+                            </div>
+                            <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--graphite)" }}>{plan.description}</p>
                           </div>
-                          <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text-muted)" }}>{plan.description}</p>
-                          <div className="w-full h-px my-4" style={{ background: "var(--border-subtle)" }} />
-                          <ul className="space-y-2 flex-1">
+                          {active && (
+                            <svg className="w-5 h-5 shrink-0" style={{ color: "var(--signal-green)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                        </div>
+                        {plan.features.length > 0 && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
                             {plan.features.map((f) => (
-                              <li key={f} className="flex items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
-                                <svg className="w-3.5 h-3.5 shrink-0" style={{ color: active ? "var(--accent)" : "var(--accent-emerald)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <span key={f} className="flex items-center gap-1 text-xs" style={{ color: "var(--graphite)" }}>
+                                <svg className="w-3 h-3 shrink-0" style={{ color: "var(--signal-green)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                                 {f}
-                              </li>
+                              </span>
                             ))}
-                          </ul>
-                          <button type="button" className="w-full mt-5 py-2 text-xs font-bold rounded-lg transition-all"
-                            style={{
-                              background: active ? "var(--gradient-rainbow)" : "transparent",
-                              color: active ? "#fff" : "var(--text-primary)",
-                              border: `1px solid ${active ? "transparent" : "var(--border-default)"}`,
-                            }}
-                          >
-                            {active ? "Selected" : "Choose " + plan.name}
-                          </button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               )}
               <button onClick={() => { setStep("info"); setError(""); }}
-                className="btn-secondary w-full py-2.5 text-sm font-semibold rounded-xl"
+                className="w-full py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer"
+                style={{ background: "transparent", color: "var(--graphite)", border: "1px solid var(--mist)" }}
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
-                Back
+                ← Back
               </button>
             </div>
           )}
 
           {/* STEP 3: STRIPE CHECKOUT */}
-          {step === "payment" && selectedPlanObj && (
-            <div className="space-y-5">
-              <div className="rounded-xl p-5" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--border-subtle)" }}>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Plan</span>
-                  <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg tracking-widest"
-                    style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                  >
-                    {selectedPlanObj.name}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-4 pb-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-                  <span className="text-sm" style={{ color: "var(--text-muted)" }}>Amount due today</span>
-                  <span className="text-2xl font-extrabold" style={{ color: "var(--text-primary)" }}>
-                    ${selectedPlanObj.price / 100}
-                    <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                      {selectedPlanObj.period === "monthly" ? "/mo" : selectedPlanObj.period === "yearly" ? "/yr" : ""}
-                    </span>
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-3 text-xs" style={{ color: "var(--text-muted)" }}>
-                  <span>Billing cycle</span>
-                  <span>{selectedPlanObj.period === "monthly" ? "Monthly subscription" : selectedPlanObj.period === "yearly" ? "Yearly subscription" : "One-time"}</span>
-                </div>
-              </div>
+          {step === "payment" && (
+            <div className="space-y-5 animate-fade-in">
+              {(() => {
+                const planObj = plans.find((p) => p.id === selectedPlan);
+                if (!planObj) return null;
+                return (
+                  <>
+                    <div className="rounded-lg p-4" style={{ background: "var(--mist)" }}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--graphite)" }}>Plan</span>
+                        <span className="text-xs font-bold uppercase px-2.5 py-0.5 rounded" style={{ background: "rgba(47,214,117,0.15)", color: "var(--signal-green)" }}>
+                          {planObj.name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mt-3 pb-3" style={{ borderBottom: "1px solid var(--mist)" }}>
+                        <span className="text-sm" style={{ color: "var(--graphite)" }}>Amount due today</span>
+                        <span className="text-xl font-extrabold" style={{ color: "var(--ink)" }}>
+                          ${planObj.price / 100}
+                          <span className="text-xs font-normal" style={{ color: "var(--graphite)" }}>
+                            {planObj.period === "monthly" ? "/mo" : planObj.period === "yearly" ? "/yr" : ""}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2 text-xs" style={{ color: "var(--graphite)" }}>
+                        <span>Billing cycle</span>
+                        <span>{planObj.period === "monthly" ? "Monthly subscription" : planObj.period === "yearly" ? "Yearly subscription" : "One-time"}</span>
+                      </div>
+                    </div>
 
-              <div className="flex items-center gap-2.5 rounded-xl p-4" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.15)" }}>
-                <svg className="w-5 h-5 shrink-0" style={{ color: "var(--accent)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                </svg>
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>Secured by <strong style={{ color: "var(--text-primary)" }}>Stripe</strong>. Your card details never touch our servers.</span>
-              </div>
+                    <div className="flex items-center gap-2.5 rounded-lg px-4 py-3 text-xs" style={{ background: "rgba(47,214,117,0.06)", border: "1px solid rgba(47,214,117,0.15)" }}>
+                      <svg className="w-4 h-4 shrink-0" style={{ color: "var(--signal-green)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                      </svg>
+                      <span style={{ color: "var(--graphite)" }}>Secured by <strong style={{ color: "var(--ink)" }}>Stripe</strong>. Your card details never touch our servers.</span>
+                    </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                <button onClick={() => { setStep("plan"); setError(""); }}
-                  className="btn-secondary py-3 text-sm font-semibold rounded-xl flex-1"
-                  disabled={paymentProcessing}
-                >
-                  Back
-                </button>
-                <button onClick={handleStripeCheckout} disabled={paymentProcessing}
-                  className="btn-primary py-3 text-sm font-semibold rounded-xl flex-[2] flex items-center justify-center gap-2"
-                  style={{ background: "var(--gradient-rainbow)" }}
-                >
-                  {paymentProcessing ? (
-                    <><span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> Redirecting to Stripe...</>
-                  ) : (
-                    <><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125V9M17.25 6v9" /></svg>
-                    Pay with Stripe</>
-                  )}
-                </button>
-              </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button onClick={() => { setStep("plan"); setError(""); }}
+                        className="py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer flex-1"
+                        style={{ background: "transparent", color: "var(--graphite)", border: "1px solid var(--mist)" }}
+                        disabled={paymentProcessing}
+                      >
+                        Back
+                      </button>
+                      <button onClick={handleStripeCheckout} disabled={paymentProcessing}
+                        className="py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 flex-[2] cursor-pointer"
+                        style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
+                      >
+                        {paymentProcessing ? (
+                          <><span className="h-4 w-4 rounded-full border-2 border-[var(--paper)] border-t-transparent animate-spin" /> Redirecting to Stripe...</>
+                        ) : (
+                          <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125V9M17.25 6v9" /></svg>
+                          Pay with Stripe</>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
           {/* STEP 4: PENDING VERIFICATION */}
           {step === "pending_verification" && (
-            <div className="text-center space-y-6 py-4">
-              <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full" style={{ border: "3px solid var(--border-default)", opacity: 0.3 }} />
-                <div className="absolute inset-0 rounded-full border-3 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent", borderWidth: 3 }} />
-                <svg className="w-8 h-8" style={{ color: "var(--accent)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="text-center space-y-6 py-6 animate-fade-in">
+              <div className="flex justify-center">
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  border: "3px solid var(--mist)",
+                  borderTopColor: "var(--signal-green)",
+                  animation: "spin 1.2s cubic-bezier(0.6, 0, 0.4, 1) infinite",
+                }} />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Verification pending</h3>
-                <p className="text-xs max-w-xs mx-auto leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                  Your request has been submitted. We will verify your account and email a product key to <strong style={{ color: "var(--text-primary)" }}>{email}</strong>.
+                <h3 className="text-lg font-bold" style={{ color: "var(--ink)" }}>Verification pending</h3>
+                <p className="text-xs max-w-xs mx-auto leading-relaxed" style={{ color: "var(--graphite)" }}>
+                  Your request has been submitted. We will verify your account and email a product key to <strong style={{ color: "var(--ink)" }}>{email}</strong>.
                 </p>
               </div>
 
-              <div className="flex items-center justify-center gap-2.5 rounded-xl px-4 py-3 text-xs" style={{ background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+              <div className="flex items-center justify-center gap-2.5 rounded-lg px-4 py-3 text-xs" style={{ background: "rgba(47,214,117,0.06)", border: "1px solid rgba(47,214,117,0.15)", color: "var(--signal-green)" }}>
                 <span className="h-2 w-2 rounded-full bg-current animate-ping" />
-                Auto-checking status every 4s
+                Auto-checking every 4s
               </div>
 
               <div className="flex flex-col gap-2.5 pt-2">
                 <button onClick={() => setStep("verify_key")}
-                  className="btn-primary w-full py-2.5 text-sm font-semibold rounded-xl"
+                  className="w-full py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer"
+                  style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
                 >
                   I Already Have a Product Key
                 </button>
                 <button onClick={() => navigate("/auth")}
-                  className="btn-secondary w-full py-2.5 text-sm font-semibold rounded-xl"
+                  className="w-full py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer"
+                  style={{ background: "transparent", color: "var(--graphite)", border: "1px solid var(--mist)" }}
                 >
                   Back to Sign In
                 </button>
@@ -566,54 +587,50 @@ export function RegisterPage() {
 
           {/* STEP 5: ACTIVATE WITH PRODUCT KEY */}
           {step === "verify_key" && (
-            <form onSubmit={handleKeySubmit} className="space-y-5">
-              <Field label="Email address" id="emailVerify" type="email" value={email} onChange={setEmail}
-                icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>}
-              />
+            <form onSubmit={handleKeySubmit} autoComplete="off" className="space-y-5 animate-fade-in">
+              <UnderlineInput label="Email address" id="emailVerify" type="email" value={email} onChange={setEmail} />
 
               <div>
+                <label htmlFor="productKeyInput" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Product Key</label>
                 <div className="relative">
-                  <div className="relative rounded-xl transition-all duration-200"
-                    style={{ background: "var(--bg-tertiary)", border: `1px solid ${productKey.length === 29 ? "var(--success)" : "var(--border-default)"}` }}
-                  >
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none" style={{ color: productKey.length === 29 ? "var(--success)" : "var(--text-muted)" }}>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                  <input id="productKeyInput" type="text" required placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" maxLength={29}
+                    value={productKey} onChange={(e) => setProductKey(formatKey(e.target.value))}
+                    className="w-full tracking-[0.15em] font-mono outline-none transition-all pb-2 pt-0.5 pr-8 text-sm"
+                    style={{
+                      color: "var(--ink)",
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: `2px solid ${productKey.length === 29 ? "var(--signal-green)" : "var(--mist)"}`,
+                    }}
+                    onFocus={(e) => { e.target.style.borderBottomColor = "var(--signal-green)"; }}
+                    onBlur={(e) => { e.target.style.borderBottomColor = productKey.length === 29 ? "var(--signal-green)" : "var(--mist)"; }}
+                  />
+                  {productKey.length === 29 && (
+                    <span className="absolute right-0 top-0 pointer-events-none" style={{ color: "var(--signal-green)" }}>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                    </div>
-                    <input id="productKeyInput" type="text" required placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" maxLength={29}
-                      value={productKey} onChange={(e) => setProductKey(formatKey(e.target.value))}
-                      className="w-full bg-transparent outline-none py-3 pl-10 pr-10 text-sm tracking-[0.15em] font-mono"
-                      style={{ color: "var(--text-primary)" }}
-                      onFocus={(e) => e.currentTarget.parentElement!.style.borderColor = "var(--accent)"}
-                      onBlur={(e) => e.currentTarget.parentElement!.style.borderColor = productKey.length === 29 ? "var(--success)" : "var(--border-default)"}
-                    />
-                    {productKey.length === 29 && (
-                      <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none" style={{ color: "var(--success)" }}>
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </span>
-                    )}
-                  </div>
+                    </span>
+                  )}
                 </div>
-                <p className="text-[11px] mt-1.5" style={{ color: "var(--text-muted)" }}>
+                <p className="text-[11px] mt-1" style={{ color: "var(--graphite)" }}>
                   Enter the product key you received via email. Format: <span className="font-mono">XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</span>
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button type="button" onClick={() => setStep("pending_verification")}
-                  className="btn-secondary py-2.5 text-sm font-semibold rounded-xl flex-1"
+                  className="py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer flex-1"
+                  style={{ background: "transparent", color: "var(--graphite)", border: "1px solid var(--mist)" }}
                 >
                   Back
                 </button>
                 <button type="submit" disabled={isLoading || productKey.length < 29}
-                  className="btn-primary py-2.5 text-sm font-semibold rounded-xl flex-[2] flex items-center justify-center gap-2"
-                  style={{ background: "var(--gradient-rainbow)" }}
+                  className="py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 flex-[2] cursor-pointer"
+                  style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
                 >
                   {isLoading ? (
-                    <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-[var(--paper)] border-t-transparent animate-spin" />
                   ) : (
                     <>Activate Account <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" /></svg></>
                   )}
@@ -621,12 +638,17 @@ export function RegisterPage() {
               </div>
             </form>
           )}
-        </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: "var(--text-muted)" }}>
-          Already have an account?{" "}
-          <button onClick={() => navigate("/auth")} className="font-semibold hover:opacity-75 transition-opacity" style={{ color: "var(--accent)" }}>Sign in</button>
-        </p>
+          {/* Mobile: back-to-home */}
+          <div className="mt-8 flex justify-center">
+            <button onClick={() => navigate("/")} type="button"
+              className="text-xs font-semibold transition-all hover:opacity-70 cursor-pointer px-4 py-2 rounded-lg"
+              style={{ color: "var(--graphite)", background: "var(--mist)", border: "none" }}
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

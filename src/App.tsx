@@ -9,20 +9,21 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { GeneratorPage } from "./pages/GeneratorPage";
 import { TestScripts } from "./pages/TestScripts";
 import { KnowledgeBase } from "./pages/KnowledgeBase";
-import { AISettings } from "./pages/AISettings";
+import { SettingsPage } from "./pages/SettingsPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { SuitesPage } from "./pages/SuitesPage";
 import { RegressionPage } from "./pages/RegressionPage";
-import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { NavBar } from "./components/NavBar";
+import { Sidebar } from "./components/Sidebar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ConfirmDialog } from "./components/ui/ConfirmDialog";
 
 function AppLayout() {
   return (
     <div className="flex min-h-screen" style={{ background: "var(--bg-primary)" }}>
+      <Sidebar />
       <main className="flex-1 flex flex-col min-w-0 min-h-screen">
         <NavBar />
         <ErrorBoundary>
@@ -32,11 +33,12 @@ function AppLayout() {
               <Route path="/generator" element={<GeneratorPage />} />
               <Route path="/test-scripts" element={<TestScripts />} />
               <Route path="/knowledge" element={<KnowledgeBase />} />
-              <Route path="/ai-settings" element={<AISettings />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/ai-settings" element={<Navigate to="/settings" replace />} />
+              <Route path="/profile" element={<Navigate to="/settings" replace />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/suites" element={<SuitesPage />} />
               <Route path="/regression" element={<RegressionPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>

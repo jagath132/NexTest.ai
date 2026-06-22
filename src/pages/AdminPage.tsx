@@ -13,7 +13,7 @@ interface AdminUser {
 export function AdminPage() {
   const user = useAppStore((s) => s.user);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [stats, setStats] = useState<{ userCount: number; keyCount: number; usedKeys: number; availableKeys: number } | null>(null);
+  const [stats, setStats] = useState<{ userCount: number; keyCount: number; usedKeys: number; availableKeys: number; deletedCount?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -69,6 +69,9 @@ export function AdminPage() {
           <Card><p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Total Keys</p><p className="text-2xl font-bold mt-1">{stats.keyCount}</p></Card>
           <Card><p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Activated</p><p className="text-2xl font-bold mt-1">{stats.usedKeys}</p></Card>
           <Card><p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Available</p><p className="text-2xl font-bold mt-1">{stats.availableKeys}</p></Card>
+          {stats.deletedCount !== undefined && (
+            <Card><p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--danger)" }}>Deleted Accounts</p><p className="text-2xl font-bold mt-1" style={{ color: "var(--danger)" }}>{stats.deletedCount}</p></Card>
+          )}
         </div>
       )}
 

@@ -3,9 +3,9 @@ import { api, type PendingRegistration } from "../lib/api";
 
 const PLAN_LABELS: Record<string, string> = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
 const PLAN_COLORS: Record<string, string> = {
-  free: "var(--text-muted)",
-  pro: "var(--accent)",
-  enterprise: "#f59e0b",
+  free: "var(--color-text-muted)",
+  pro: "var(--color-accent)",
+  enterprise: "var(--color-warning)",
 };
 
 export function VerificationsPage() {
@@ -30,7 +30,7 @@ export function VerificationsPage() {
       const res = await api.get<{ registrations: PendingRegistration[] }>(`/api/admin/verifications?${params}`);
       setItems(res.data.registrations);
     } catch {
-      showToast("error", "Failed to load pending registrations");
+      showToast("error", "Failed to load registrations");
     }
     setLoading(false);
   }
@@ -44,7 +44,7 @@ export function VerificationsPage() {
       showToast("success", `Approved — product key sent to ${item.email}`);
       await load();
     } catch (err: any) {
-      showToast("error", err?.response?.data?.error || "Failed to approve registration");
+      showToast("error", err?.response?.data?.error || "Failed to approve");
     }
     setActionLoading(null);
   }
@@ -58,7 +58,7 @@ export function VerificationsPage() {
       setRejectReason("");
       await load();
     } catch (err: any) {
-      showToast("error", err?.response?.data?.error || "Failed to reject registration");
+      showToast("error", err?.response?.data?.error || "Failed to reject");
     }
     setActionLoading(null);
   }
@@ -67,25 +67,25 @@ export function VerificationsPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="section-header">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <h3>Pending Verifications</h3>
           {pendingCount > 0 && (
             <span style={{
-              background: "linear-gradient(135deg, #f59e0b, #ef4444)",
-              color: "#fff",
+              background: "var(--color-warning-subtle)",
+              color: "var(--color-warning)",
               borderRadius: 20,
               padding: "2px 10px",
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 600,
+              border: "1px solid rgba(217,119,6,0.2)",
             }}>
               {pendingCount} pending
             </span>
           )}
         </div>
         <button className="btn btn-secondary" onClick={load}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
             <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
           </svg>
@@ -93,7 +93,18 @@ export function VerificationsPage() {
         </button>
       </div>
 
-      {/* Filter Tabs */}
+      <div className="info-banner">
+        <svg className="info-banner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div>
+          <div className="info-banner-title">Manual Verification Required</div>
+          <div className="info-banner-text">
+            All new registrations require admin approval. <strong>Approve</strong> generates a key and emails it automatically. <strong>Reject</strong> sends a denial notice.
+          </div>
+        </div>
+      </div>
+
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="pill-group">
           <button className={`pill${filter === "pending_verification" ? " active" : ""}`} onClick={() => setFilter("pending_verification")}>
@@ -105,141 +116,95 @@ export function VerificationsPage() {
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div style={{
-        background: "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.06))",
-        border: "1px solid rgba(99,102,241,0.2)",
-        borderRadius: 10,
-        padding: "14px 18px",
-        marginBottom: 20,
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 12,
-      }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" style={{ marginTop: 1, flexShrink: 0 }}>
-          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", marginBottom: 3 }}>
-            Manual Verification Required
-          </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6 }}>
-            All new registrations require admin approval before a product key is issued. When you <strong>Approve</strong> a request, a key is generated and emailed automatically. <strong>Reject</strong> sends a denial notice.
-          </div>
+      {loading ? (
+        <div className="empty-state">
+          <div style={{ width: 24, height: 24, border: "2px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+          <p>Loading registrations...</p>
         </div>
-      </div>
+      ) : items.length === 0 ? (
+        <div className="empty-state">
+          <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3>{filter === "pending_verification" ? "All Clear!" : "No Registrations"}</h3>
+          <p>{filter === "pending_verification" ? "No pending verifications at this time." : "No registration records found."}</p>
+        </div>
+      ) : (
+        <div className="verification-queue">
+          {items.map((item) => (
+            <div key={item.pendingId} className="verification-card">
+              <div className="verification-avatar" style={{
+                background: item.plan ? PLAN_COLORS[item.plan] + "18" : "var(--color-elevated)",
+                color: item.plan ? PLAN_COLORS[item.plan] : "var(--color-text-muted)",
+              }}>
+                {(item.name || item.email).charAt(0).toUpperCase()}
+              </div>
+              <div className="verification-info">
+                <div className="name">{item.name || "—"}</div>
+                <div className="email">{item.email}</div>
+                <div className="verification-meta">
+                  <div className="verification-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /></svg>
+                    <span style={{ color: item.plan ? PLAN_COLORS[item.plan] : "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", fontSize: 11, letterSpacing: "0.05em" }}>
+                      {item.plan ? PLAN_LABELS[item.plan] : "—"}
+                    </span>
+                  </div>
+                  <div className="verification-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 1v8m0 0V1zm0 8l-3-3m3 3l3-3" /></svg>
+                    {new Date(item.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                  </div>
+                  <div className="verification-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+                    <span className={`badge badge-${item.paymentStatus === "completed" ? "used" : "available"}`} style={{ fontSize: 10 }}>
+                      {item.paymentStatus}
+                    </span>
+                  </div>
+                  <div className="verification-meta-item">
+                    <span className={`badge ${item.status === "pending_verification" ? "badge-warning" : item.status === "ready" ? "badge-used" : "badge-available"}`} style={{ fontSize: 10 }}>
+                      {item.status === "pending_verification" ? "Awaiting" : item.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {item.status === "pending_verification" ? (
+                <div className="verification-actions">
+                  <button
+                    className="btn btn-primary btn-sm"
+                    disabled={actionLoading === item.pendingId}
+                    onClick={() => handleApprove(item)}
+                    title="Approve and send product key"
+                  >
+                    {actionLoading === item.pendingId ? (
+                      <div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite" }} />
+                    ) : (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    Approve
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    disabled={actionLoading === item.pendingId}
+                    onClick={() => { setSelectedItem(item); setRejectReason(""); }}
+                    title="Reject this registration"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                    Reject
+                  </button>
+                </div>
+              ) : (
+                <span style={{ fontSize: 12, color: "var(--color-text-muted)", fontStyle: "italic", flexShrink: 0, marginTop: 4 }}>
+                  {item.status === "ready" ? "Approved" : item.status}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Table */}
-      <div className="card" style={{ padding: 0 }}>
-        {loading ? (
-          <div className="empty-state">
-            <div style={{ width: 28, height: 28, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-            <p>Loading registrations...</p>
-          </div>
-        ) : items.length === 0 ? (
-          <div className="empty-state">
-            <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3>{filter === "pending_verification" ? "All Clear!" : "No Registrations"}</h3>
-            <p>{filter === "pending_verification" ? "No pending verifications at this time." : "No registration records found."}</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Plan</th>
-                  <th>Payment</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.pendingId}>
-                    <td>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{item.name || "—"}</span>
-                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{item.email}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{
-                        color: item.plan ? PLAN_COLORS[item.plan] : "var(--text-muted)",
-                        fontWeight: 600,
-                        fontSize: 12,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                      }}>
-                        {item.plan ? PLAN_LABELS[item.plan] : "—"}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge badge-${item.paymentStatus === "completed" ? "used" : "available"}`}>
-                        {item.paymentStatus}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${item.status === "pending_verification" ? "badge-warning" : item.status === "ready" ? "badge-used" : "badge-available"}`}
-                        style={item.status === "pending_verification" ? {
-                          background: "rgba(245,158,11,0.15)",
-                          color: "#f59e0b",
-                          border: "1px solid rgba(245,158,11,0.3)",
-                        } : {}}>
-                        {item.status === "pending_verification" ? "⏳ Awaiting" : item.status}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--text-muted)" }}>
-                      {new Date(item.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
-                    </td>
-                    <td>
-                      {item.status === "pending_verification" ? (
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button
-                            className="btn btn-sm btn-primary"
-                            disabled={actionLoading === item.pendingId}
-                            onClick={() => handleApprove(item)}
-                            title="Approve and send product key"
-                          >
-                            {actionLoading === item.pendingId ? (
-                              <div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite" }} />
-                            ) : (
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            )}
-                            Approve
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            disabled={actionLoading === item.pendingId}
-                            onClick={() => { setSelectedItem(item); setRejectReason(""); }}
-                            title="Reject this registration"
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 12, color: "var(--text-muted)", fontStyle: "italic" }}>
-                          {item.status === "ready" ? "✓ Approved" : item.status}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Reject Modal */}
       {selectedItem && (
         <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
@@ -250,9 +215,9 @@ export function VerificationsPage() {
               </button>
             </div>
             <div className="modal-body">
-              <div style={{ marginBottom: 16, padding: "12px 16px", background: "var(--bg-tertiary)", borderRadius: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{selectedItem.name}</div>
-                <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{selectedItem.email}</div>
+              <div style={{ marginBottom: 16, padding: "12px 16px", background: "var(--color-bg)", borderRadius: "var(--radius)", border: "1px solid var(--color-border)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2, color: "var(--color-text-primary)" }}>{selectedItem.name}</div>
+                <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{selectedItem.email}</div>
                 {selectedItem.plan && (
                   <div style={{ fontSize: 11, color: PLAN_COLORS[selectedItem.plan], fontWeight: 600, marginTop: 4, textTransform: "uppercase" }}>
                     {PLAN_LABELS[selectedItem.plan]} Plan
@@ -263,14 +228,13 @@ export function VerificationsPage() {
                 <label>Reason for Rejection (optional)</label>
                 <textarea
                   className="form-input"
-                  placeholder="e.g. Unable to verify identity, suspicious activity, duplicate account..."
+                  placeholder="e.g. Unable to verify identity, suspicious activity..."
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   rows={3}
-                  style={{ resize: "vertical", fontFamily: "inherit" }}
                 />
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
-                  This reason will be included in the rejection email sent to the user.
+                <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 4 }}>
+                  This reason will be included in the rejection email.
                 </div>
               </div>
             </div>
@@ -288,7 +252,6 @@ export function VerificationsPage() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>

@@ -8,7 +8,7 @@ export function DesktopOnlyGuard({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center animate-fade-in">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl mb-5" style={{ background: "var(--gradient-rainbow)" }}>
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl mb-5" style={{ background: "var(--accent)" }}>
         <Logo variant="mark" />
       </div>
       <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>

@@ -38,10 +38,10 @@ export function ResetPasswordPage() {
     <div className="relative min-h-screen flex items-center justify-center px-3 sm:px-4 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
       <div className="absolute top-[-15%] left-[-10%] h-[300px] w-[300px] sm:h-[600px] sm:w-[600px] rounded-full opacity-[0.06] pointer-events-none animate-float-slow max-sm:hidden" style={{ background: "var(--accent-violet)", filter: "blur(180px)" }} />
       <div className="absolute bottom-[-15%] right-[-10%] h-[300px] w-[300px] sm:h-[600px] sm:w-[600px] rounded-full opacity-[0.05] pointer-events-none animate-float-slow max-sm:hidden" style={{ background: "var(--accent-cyan)", filter: "blur(180px)" }} />
-      <div className="relative w-full max-w-sm sm:max-w-md rounded-lg p-5 sm:p-8 animate-fade-in gradient-border" style={{ background: "var(--bg-card)" }}>
+      <div className="relative w-full max-w-sm sm:max-w-md rounded-lg p-5 sm:p-8 animate-fade-in" style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
         <div className="flex flex-col items-center mb-8">
           <NexTestIcon size="lg" />
-          <h1 className="text-2xl font-bold tracking-tight mt-4 gradient-text-rainbow">NexTest</h1>
+          <h1 className="text-2xl font-bold tracking-tight mt-4 gradient-text">NexTest</h1>
           <p className="text-sm mt-1.5 text-center" style={{ color: "var(--text-muted)" }}>
             Set a new password for your account.
           </p>

@@ -7,6 +7,7 @@ export type User = {
   role: string;
   createdAt: string;
   activeProvider?: AiProvider | null;
+  has_seen_welcome?: boolean;
 };
 
 export type AuthResponse = {
@@ -14,9 +15,31 @@ export type AuthResponse = {
   user: User;
 };
 
+const SESSION_TOKEN_KEY = "nextest_token";
+
+export function getStoredToken(): string | null {
+  try { return sessionStorage.getItem(SESSION_TOKEN_KEY); } catch { return null; }
+}
+
+export function setStoredToken(token: string): void {
+  try { sessionStorage.setItem(SESSION_TOKEN_KEY, token); } catch { /* ignored */ }
+}
+
+export function clearStoredToken(): void {
+  try { sessionStorage.removeItem(SESSION_TOKEN_KEY); } catch { /* ignored */ }
+}
+
 export const api = axios.create({
   baseURL: "",
   withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export type KnowledgeFile = {
@@ -303,8 +326,12 @@ export async function selectPlan(data: { pendingId: string; plan: string }) {
 }
 
 export async function completeRegistration(data: { email: string; productKey: string }) {
-  const res = await api.post<AuthResponse>("/api/auth/complete-registration", data);
+  const res = await api.post<{ ok: boolean }>("/api/auth/complete-registration", data);
   return res.data;
+}
+
+export async function markWelcomeSeen() {
+  await api.post("/api/auth/welcome-seen");
 }
 
 export async function createCheckoutSession(data: { pendingId: string; plan: string; email: string }) {

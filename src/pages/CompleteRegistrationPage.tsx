@@ -91,22 +91,11 @@ export function CompleteRegistrationPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
-      {/* Decorative background orbs */}
-      <div className="absolute top-[-15%] left-[-10%] h-[300px] w-[300px] sm:h-[600px] sm:w-[600px] rounded-full opacity-[0.06] pointer-events-none" style={{ background: "var(--accent-violet)", filter: "blur(180px)" }} />
-      <div className="absolute bottom-[-15%] right-[-10%] h-[300px] w-[300px] sm:h-[600px] sm:w-[600px] rounded-full opacity-[0.05] pointer-events-none" style={{ background: "var(--accent-cyan)", filter: "blur(180px)" }} />
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-8 overflow-hidden reg-bg-mesh">
 
-      <div className="relative w-full max-w-md rounded-2xl p-6 sm:p-8 animate-fade-in border" 
-        style={{ 
-          background: "var(--bg-glass)", 
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderColor: "var(--border-default)", 
-          boxShadow: "0 12px 50px rgba(0,0,0,0.35)" 
-        }}
-      >
+      <div className="relative w-full max-w-md reg-card p-6 sm:p-8 animate-slide-up">
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="flex items-center justify-center w-14 h-14 rounded-2xl" style={{ background: "var(--accent-gradient)" }}>
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl" style={{ background: "var(--accent)" }}>
             <NexTestIcon size="sm" />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-4" style={{ color: "var(--text-primary)" }}>Activate your account</h1>

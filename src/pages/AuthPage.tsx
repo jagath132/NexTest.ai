@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { api, type AuthResponse } from "../lib/api";
+import { api, setStoredToken, type AuthResponse } from "../lib/api";
 import { useAppStore } from "../store/useAppStore";
 
 type AuthMode = "login" | "forgot";
@@ -88,12 +88,14 @@ export function AuthPage() {
           return;
         }
         setBtnSuccess(true);
+        setStoredToken(res.data.token);
+        const isNewUser = !res.data.user.has_seen_welcome;
         setTimeout(() => {
           setUser(res.data.user);
           try {
             api.get<{ keys: Record<string, boolean> }>("/api/settings/api-keys").then((kr) => setSavedProviderKeys(kr.data.keys ?? {})).catch(() => {});
           } catch { /* ignore */ }
-          navigate("/dashboard");
+          navigate(isNewUser ? "/dashboard?welcome=true" : "/dashboard");
         }, 400);
       } else {
         const res = await api.post<{ message: string; resetLink?: string }>("/api/auth/forgot-password", { email });
@@ -136,7 +138,7 @@ export function AuthPage() {
 
         {/* Headline */}
         <div className="flex-1 flex flex-col justify-center px-10">
-          <h1 className="text-5xl font-bold tracking-tight leading-[1.1] mb-3" style={{ color: "var(--paper)", fontFamily: "var(--font-sans)" }}>
+          <h1 className="text-5xl font-bold tracking-tight leading-[1.1] mb-3 gradient-shift" style={{ fontFamily: "var(--font-sans)" }}>
             Ship with<br />confidence
           </h1>
           <p className="text-base max-w-sm" style={{ color: "rgba(247,248,246,0.55)", fontFamily: "var(--font-sans)" }}>
@@ -236,13 +238,14 @@ export function AuthPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Email</label>
-                <input id="email" type="email" required value={email}
+                <label htmlFor="auth_email" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Email</label>
+                <input id="auth_email" name="auth_email" type="email" required value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
+                  autoComplete="off"
                   className="w-full text-sm outline-none transition-all pb-2 pt-0.5"
                   style={{
                     color: "var(--ink)",
@@ -259,11 +262,12 @@ export function AuthPage() {
               {/* Password */}
               {mode === "login" && (
                 <div>
-                  <label htmlFor="password" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Password</label>
+                  <label htmlFor="auth_password" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Password</label>
                   <div className="relative">
-                    <input id="password" type={showPassword ? "text" : "password"} required value={password}
+                    <input id="auth_password" name="auth_password" type={showPassword ? "text" : "password"} required value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
+                      autoComplete="new-password"
                       className="w-full text-sm outline-none transition-all pb-2 pt-0.5 pr-8"
                       style={{
                         color: "var(--ink)",
@@ -387,10 +391,10 @@ export function AuthPage() {
           )}
 
           {/* Mobile: back-to-home */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 flex justify-center">
             <button onClick={() => navigate("/")} type="button"
-              className="text-xs font-semibold transition-opacity hover:opacity-70 cursor-pointer"
-              style={{ color: "var(--graphite)", background: "none", border: "none", padding: 0 }}
+              className="text-xs font-semibold transition-all hover:opacity-70 cursor-pointer px-4 py-2 rounded-lg"
+              style={{ color: "var(--graphite)", background: "var(--mist)", border: "none" }}
             >
               ← Back to Home
             </button>

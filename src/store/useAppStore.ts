@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api, clearSession, getHistory, getProfile, getQaResult, saveHistory, saveQaResult, type AiProvider, type HistoryItem, type ProviderKeyMap, type QaResponse, type TestScriptResponse, type ThemeMode, type User } from "../lib/api";
+import { api, clearSession, clearStoredToken, getHistory, getProfile, getQaResult, getStoredToken, saveHistory, saveQaResult, type AiProvider, type HistoryItem, type ProviderKeyMap, type QaResponse, type TestScriptResponse, type ThemeMode, type User } from "../lib/api";
 
 interface ConfirmDialogState {
   open: boolean;
@@ -122,6 +122,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setNavDrawerOpen: (navDrawerOpen) => set({ navDrawerOpen }),
   logout: () => {
     clearSession();
+    clearStoredToken();
     set({ user: null });
   },
   openConfirm: (title, message, onConfirm, confirmLabel) => {
@@ -132,6 +133,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   initialize: async () => {
+    if (!getStoredToken()) {
+      clearSession();
+      api.post("/api/auth/logout").catch(() => {});
+      set({ authChecking: false });
+      return;
+    }
     try {
       const res = await api.get<{ user: User }>("/api/auth/me");
       const activeProv = res.data.user.activeProvider || null;
@@ -153,6 +160,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       }
     } catch {
       clearSession();
+      clearStoredToken();
     }
     set({ authChecking: false });
   },

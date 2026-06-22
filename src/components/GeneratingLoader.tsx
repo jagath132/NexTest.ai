@@ -37,13 +37,13 @@ export function GeneratingLoader({
   const currentIndex = currentSteps.indexOf(phase ?? "");
 
   return (
-    <Card className="p-8 gradient-border">
+    <Card className="p-8" style={{ borderColor: "var(--border-default)" }}>
       <div className="flex flex-col items-center text-center">
         <div className="relative flex h-14 w-14 items-center justify-center">
-          <div className="absolute inset-0 rounded-full animate-spin" style={{ border: "3px solid transparent", borderImage: "var(--gradient-rainbow) 1", WebkitMaskImage: "-webkit-radial-gradient(white, black)" }} />
-          <span className="text-xs font-bold gradient-text-rainbow">AI</span>
+          <div className="absolute inset-0 rounded-full animate-spin" style={{ border: "3px solid var(--accent)", borderTopColor: "transparent" }} />
+          <span className="text-xs font-bold gradient-text">AI</span>
         </div>
-        <h2 className="mt-4 text-lg font-bold gradient-text-rainbow">
+        <h2 className="mt-4 text-lg font-bold gradient-text">
           {phase ? (phaseLabels[phase] ?? "Generating") : "Generating Test Cases"}
         </h2>
         <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>

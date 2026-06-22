@@ -73,10 +73,10 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
         {toast && (
           <div style={{ padding: "0 24px", marginTop: 8 }}>
             <div style={{
-              padding: "10px 14px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 8,
-              background: toast.type === "success" ? "var(--success-soft)" : "var(--danger-soft)",
-              color: toast.type === "success" ? "var(--success)" : "var(--danger)",
-              border: `1px solid ${toast.type === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+              padding: "10px 14px", borderRadius: 6, fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+              background: toast.type === "success" ? "var(--color-success-subtle)" : "var(--color-danger-subtle)",
+              color: toast.type === "success" ? "var(--color-success)" : "var(--color-danger)",
+              border: `1px solid ${toast.type === "success" ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.25)"}`,
             }}>
               {toast.type === "success" ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
@@ -90,24 +90,17 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
 
         {loading ? (
           <div className="modal-body" style={{ textAlign: "center", padding: "40px 24px" }}>
-            <span className="h-5 w-5 rounded-full border-2 border-transparent border-t-current animate-spin" style={{ display: "inline-block", color: "var(--text-muted)" }} />
+            <div style={{ width: 24, height: 24, border: "2px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite", display: "inline-block" }} />
           </div>
         ) : !customer ? (
-          <div className="modal-body" style={{ textAlign: "center", padding: "40px 24px", color: "var(--text-muted)" }}>
+          <div className="modal-body" style={{ textAlign: "center", padding: "40px 24px", color: "var(--color-text-muted)" }}>
             Customer not found.
           </div>
         ) : (
           <>
-            <div style={{ display: "flex", gap: 0, padding: "16px 24px 0", borderBottom: "1px solid var(--border-default)" }}>
+            <div className="modal-tabs">
               {(["details", "edit"] as const).map((t) => (
-                <button key={t} onClick={() => setTab(t)}
-                  style={{
-                    padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", background: "none",
-                    color: tab === t ? "var(--accent)" : "var(--text-muted)", border: "none",
-                    borderBottom: tab === t ? "2px solid var(--accent)" : "2px solid transparent",
-                    transition: "color 0.15s, border-color 0.15s",
-                  }}
-                >
+                <button key={t} className={`modal-tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
                   {t === "details" ? "Customer Details" : "Edit Customer"}
                 </button>
               ))}
@@ -115,63 +108,61 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
 
             <div className="modal-body">
               {tab === "details" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={{ textAlign: "center", padding: "12px 0" }}>
+                <div className="details-section">
+                  <div style={{ textAlign: "center", padding: "8px 0" }}>
                     <div style={{
-                      width: 48, height: 48, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      background: "var(--accent-soft)", color: "var(--accent)", fontSize: 20, fontWeight: 700,
+                      width: 44, height: 44, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--color-accent-subtle)", color: "var(--color-accent)", fontSize: 18, fontWeight: 700,
                     }}>
                       {customer.email.charAt(0).toUpperCase()}
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{customer.email}</div>
-                    {customer.name && <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{customer.name}</div>}
+                    <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" }}>{customer.email}</div>
+                    {customer.name && <div style={{ fontSize: 13, color: "var(--color-text-muted)" }}>{customer.name}</div>}
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: "8px 12px", fontSize: 13 }}>
-                    <span style={{ color: "var(--text-muted)" }}>Role</span>
-                    <span><span className={`badge ${customer.role === "admin" ? "badge-used" : "badge-available"}`}>{customer.role}</span></span>
+                  <div className="modal-info-grid">
+                    <span className="label">Role</span>
+                    <span className="value"><span className={`badge ${customer.role === "admin" ? "badge-used" : "badge-available"}`}>{customer.role}</span></span>
 
-                    <span style={{ color: "var(--text-muted)" }}>Notes</span>
-                    <span style={{ color: customer.notes ? "var(--text-primary)" : "var(--text-muted)" }}>
-                      {customer.notes || "-"}
+                    <span className="label">Notes</span>
+                    <span className={customer.notes ? "value" : "value muted"}>{customer.notes || "-"}</span>
+
+                    <span className="label">Product Key</span>
+                    <span className="text-mono" style={{ fontSize: 12, letterSpacing: 1, color: customer.productKey ? "var(--color-text-primary)" : "var(--color-text-muted)" }}>
+                      {customer.productKey || "-"}
                     </span>
 
-                    <span style={{ color: "var(--text-muted)" }}>Product Key</span>
-                    <span style={{ fontFamily: "monospace", fontSize: 12, letterSpacing: 1 }}>
-                      {customer.productKey || <span style={{ color: "var(--text-muted)" }}>-</span>}
-                    </span>
-
-                    <span style={{ color: "var(--text-muted)" }}>Key Status</span>
-                    <span>
+                    <span className="label">Key Status</span>
+                    <span className="value">
                       {customer.keyStatus ? (
                         <span className={`badge badge-${customer.keyStatus}`} style={{ fontSize: 11 }}>{customer.keyStatus}</span>
-                      ) : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>-</span>}
+                      ) : <span style={{ color: "var(--color-text-muted)", fontSize: 12 }}>-</span>}
                     </span>
 
-                    <span style={{ color: "var(--text-muted)" }}>Registered</span>
-                    <span>{new Date(customer.createdAt).toLocaleString()}</span>
+                    <span className="label">Registered</span>
+                    <span className="value">{new Date(customer.createdAt).toLocaleString()}</span>
                   </div>
 
                   {customer.keys.length > 1 && (
-                    <div style={{ borderTop: "1px solid var(--border-default)", paddingTop: 12 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8 }}>All Keys ({customer.keys.length})</div>
+                    <div style={{ borderTop: "1px solid var(--color-border-light)", paddingTop: 12 }}>
+                      <div className="section-title">All Keys ({customer.keys.length})</div>
                       {customer.keys.map((k) => (
                         <div key={k.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", fontSize: 12 }}>
-                          <span className={`badge badge-${k.status}`} style={{ fontSize: 10, minWidth: 50, textAlign: "center" }}>{k.status}</span>
-                          <span style={{ fontFamily: "monospace", letterSpacing: 1, color: "var(--text-primary)" }}>{k.key}</span>
-                          <span style={{ color: "var(--text-muted)", marginLeft: "auto" }}>{new Date(k.createdAt).toLocaleDateString()}</span>
+                          <span className={`badge badge-${k.status}`} style={{ fontSize: 10, minWidth: 48, textAlign: "center" }}>{k.status}</span>
+                          <span className="text-mono" style={{ letterSpacing: 1, color: "var(--color-text-primary)" }}>{k.key}</span>
+                          <span style={{ color: "var(--color-text-muted)", marginLeft: "auto" }}>{new Date(k.createdAt).toLocaleDateString()}</span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <div style={{ display: "flex", gap: 8, borderTop: "1px solid var(--border-default)", paddingTop: 16, marginTop: 8 }}>
-                    <button className="btn btn-primary" onClick={() => setTab("edit")} style={{ fontSize: 12 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  <div className="action-row">
+                    <button className="btn btn-primary btn-sm" onClick={() => setTab("edit")}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                       Edit
                     </button>
-                    <button className="btn btn-danger" onClick={handleDelete} style={{ fontSize: 12 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                    <button className="btn btn-danger btn-sm" onClick={handleDelete}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
                       Delete
                     </button>
                   </div>
@@ -191,10 +182,10 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
                     <label>Notes</label>
                     <textarea className="form-input" value={notes} onChange={(e) => setNotes(e.target.value)}
                       placeholder="Internal notes about this customer..."
-                      rows={3} style={{ resize: "vertical" }}
+                      rows={3}
                     />
                   </div>
-                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", borderTop: "1px solid var(--border-default)", paddingTop: 16 }}>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", borderTop: "1px solid var(--color-border-light)", paddingTop: 16 }}>
                     <button type="submit" className="btn btn-primary" disabled={sending}>
                       {sending ? "Saving..." : "Save Changes"}
                     </button>

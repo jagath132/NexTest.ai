@@ -4,7 +4,7 @@ import { defineConfig, loadEnv } from "vite";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   // Ensure critical secrets are on process.env for server-side modules
-  for (const key of ["JWT_SECRET", "ENCRYPTION_SECRET", "MONGO_URI", "MONGO_DB_NAME", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "APP_URL", "STRIPE_PRO_PRICE_ID", "STRIPE_ENTERPRISE_PRICE_ID", "VITE_SENTRY_DSN"]) {
+  for (const key of ["RESEND_API_KEY", "JWT_SECRET", "ENCRYPTION_SECRET", "MONGO_URI", "MONGO_DB_NAME", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "APP_URL", "STRIPE_PRO_PRICE_ID", "STRIPE_ENTERPRISE_PRICE_ID", "VITE_SENTRY_DSN"]) {
     if (env[key]) process.env[key] ??= env[key];
   }
 

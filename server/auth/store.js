@@ -47,9 +47,10 @@ export const authStore = {
       name: name || null,
       role,
       createdAt: new Date().toISOString(),
+      has_seen_welcome: false,
     };
     const result = await db.collection("users").insertOne(doc);
-    return { id: result.insertedId.toString(), email: doc.email, role: doc.role, createdAt: doc.createdAt };
+    return { id: result.insertedId.toString(), email: doc.email, role: doc.role, createdAt: doc.createdAt, has_seen_welcome: false };
   },
 
   async createUser({ email, password, name }) {
@@ -155,6 +156,17 @@ export const authStore = {
       { _id: new ObjectId(userId) },
       { $set: { passwordHash, salt } }
     );
+    return true;
+  },
+
+  async resetUserPassword(userId, newPassword) {
+    const db = getDb();
+    const salt = crypto.randomBytes(16).toString("hex");
+    const passwordHash = crypto.pbkdf2Sync(newPassword, salt, PBKDF2_ITERATIONS, 64, "sha512").toString("hex");
+    const { ObjectId } = await import("mongodb");
+    let query;
+    try { query = { _id: new ObjectId(userId) }; } catch { query = { _id: userId }; }
+    await db.collection("users").updateOne(query, { $set: { passwordHash, salt } });
     return true;
   },
 
