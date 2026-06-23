@@ -64,6 +64,12 @@ export function createApiMiddleware(env) {
       return;
     }
 
+    // Healthcheck — always responds immediately, no DB needed
+    if (url.pathname === "/api/health" && req.method === "GET") {
+      sendJson(res, 200, { status: "ok", uptime: process.uptime() });
+      return;
+    }
+
     try {
       await dbReady;
     } catch (dbError) {
