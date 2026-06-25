@@ -1,16 +1,16 @@
 import { MongoClient } from "mongodb";
 
-const MONGO_URI = process.env.MONGO_URI || (() => {
-  console.error("⚠️  MONGO_URI env var not set — falling back to localhost:27017 (will fail in production)");
-  return "mongodb://localhost:27017";
-})();
-const DB_NAME = process.env.MONGO_DB_NAME || "nextest";
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017";
+const DB_NAME = process.env.MONGO_DB_NAME || "forgekey";
 
 let client = null;
 let db = null;
 
 export async function connectDb() {
   if (db) return db;
+  if (!process.env.MONGO_URI) {
+    console.error("⚠️  MONGO_URI env var not set — falling back to localhost:27017 (will fail in production)");
+  }
   client = new MongoClient(MONGO_URI);
   await client.connect();
   db = client.db(DB_NAME);

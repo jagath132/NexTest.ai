@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       {
-        name: "license-manager-api",
+        name: "forgekey-api",
         configureServer(server) {
           server.middlewares.use(createApiMiddleware(env));
         },

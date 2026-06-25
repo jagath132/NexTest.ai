@@ -544,10 +544,10 @@ export function createApiMiddleware(env) {
           }
           const reasonHtml = reason ? `<p><strong>Reason:</strong> ${reason}</p>` : "";
           await t.sendMail({
-            from: process.env.SMTP_FROM || "noreply@nextest.app",
+            from: process.env.SMTP_FROM || "noreply@forgekey.app",
             to: pending.email,
-            subject: "NexTest Registration Update",
-            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;"><h1 style="color:#7c3aed;">NexTest</h1><p>Hello${pending.name ? " " + pending.name : ""},</p><p>We were unable to approve your NexTest registration at this time.</p>${reasonHtml}<p>If you believe this is an error, please contact support.</p><p style="color:#999;font-size:12px;">NexTest Team</p></body></html>`,
+            subject: "ForgeKey Registration Update",
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;"><h1 style="color:#F59E0B;">ForgeKey</h1><p>Hello${pending.name ? " " + pending.name : ""},</p><p>We were unable to approve your ForgeKey registration at this time.</p>${reasonHtml}<p>If you believe this is an error, please contact support.</p><p style="color:#999;font-size:12px;">ForgeKey Team</p></body></html>`,
           });
         } catch (emailErr) {
           console.warn("Rejection email failed:", emailErr.message);
@@ -584,7 +584,7 @@ export function createApiMiddleware(env) {
 
       sendJson(res, 404, { error: "Route not found." });
     } catch (error) {
-      console.error("License Manager API error:", error);
+      console.error("ForgeKey API error:", error);
       sendJson(res, error.statusCode || 500, { error: error.message || "Internal error" });
     }
   };

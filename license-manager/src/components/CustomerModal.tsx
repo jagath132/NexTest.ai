@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, type Customer } from "../lib/api";
+import { X, Check, AlertCircle, Loader2, PenSquare, Trash2 } from "lucide-react";
 
 type Tab = "details" | "edit";
 
@@ -66,7 +67,7 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
         <div className="modal-header">
           <h3>Customer</h3>
           <button className="modal-close" onClick={onClose}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+            <X size={18} strokeWidth={2} />
           </button>
         </div>
 
@@ -79,9 +80,9 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
               border: `1px solid ${toast.type === "success" ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.25)"}`,
             }}>
               {toast.type === "success" ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+                <Check size={16} strokeWidth={2} />
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                <AlertCircle size={16} strokeWidth={2} />
               )}
               {toast.message}
             </div>
@@ -90,7 +91,7 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
 
         {loading ? (
           <div className="modal-body" style={{ textAlign: "center", padding: "40px 24px" }}>
-            <div style={{ width: 24, height: 24, border: "2px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite", display: "inline-block" }} />
+            <Loader2 size={24} className="lm-spin" strokeWidth={2} />
           </div>
         ) : !customer ? (
           <div className="modal-body" style={{ textAlign: "center", padding: "40px 24px", color: "var(--color-text-muted)" }}>
@@ -158,11 +159,11 @@ export function CustomerModal({ customerId, onClose, onUpdated }: Props) {
 
                   <div className="action-row">
                     <button className="btn btn-primary btn-sm" onClick={() => setTab("edit")}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                      <PenSquare size={12} strokeWidth={2} />
                       Edit
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={handleDelete}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                      <Trash2 size={12} strokeWidth={2} />
                       Delete
                     </button>
                   </div>

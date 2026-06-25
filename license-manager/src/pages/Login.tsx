@@ -1,7 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useAdminStore } from "../store/useAdminStore";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Check, AlertCircle, Loader2 } from "lucide-react";
 
-export function LoginPage() {
+function Spinner() {
+  return <Loader2 size={18} className="lk-login-spinner" />;
+}
+
+export function LoginPage({ onBack }: { onBack?: () => void }) {
   const { login, error: storeError } = useAdminStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,95 +41,97 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-brand">
-          <img src="/logo-mark.svg" alt="NexTest" width="48" height="48" style={{ borderRadius: "var(--radius-lg)", display: "inline-block", marginBottom: "var(--spacing-4)" }} />
-          <h1>License Manager</h1>
-          <p>Sign in to manage product keys and customers.</p>
-        </div>
+    <div className="lk-login-root">
+      <div className="lk-blob lk-blob-1" style={{ width: 500, height: 500 }} />
+      <div className="lk-blob lk-blob-2" style={{ width: 400, height: 400 }} />
 
-        {error && (
-          <div className="alert alert-error">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            {error}
-          </div>
-        )}
+      {onBack && (
+        <button className="lk-login-back" onClick={onBack}>
+          <ArrowLeft size={14} strokeWidth={2} />
+          Back to home
+        </button>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="login-input-group">
-            <svg className="login-input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <input className="login-input" type="email" required value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="enter admin email"
-              autoComplete="email"
-              spellCheck={false}
-            />
+      <div className="lk-login-card">
+        <div className="lk-login-card-inner">
+          <div className="lk-login-header">
+            <div className="lk-login-logo">
+              <Check size={20} strokeWidth={2.5} />
+            </div>
+            <h1 className="lk-login-title">ForgeKey</h1>
+            <p className="lk-login-desc">Sign in to manage product keys and customers.</p>
           </div>
 
-          <div className="login-input-group">
-            <svg className="login-input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0110 0v4" />
-            </svg>
-            <input className="login-input" type={showPassword ? "text" : "password"} required value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="enter admin password"
-              autoComplete="current-password"
-            />
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                background: "none", border: "none", cursor: "pointer", padding: 4,
-                color: "var(--color-text-muted)", display: "flex", alignItems: "center",
-              }}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
+          {error && (
+            <div className="lk-login-alert">
+              <AlertCircle size={16} strokeWidth={2} />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="lk-login-form">
+            <div className="lk-login-field">
+              <label className="lk-login-label" htmlFor="login-email">Email</label>
+              <div className="lk-login-input-wrap">
+                <span className="lk-login-input-icon"><Mail size={18} strokeWidth={1.8} /></span>
+                <input
+                  id="login-email"
+                  className="lk-login-input"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@company.com"
+                  autoComplete="email"
+                  spellCheck={false}
+                />
+              </div>
+            </div>
+
+            <div className="lk-login-field">
+              <label className="lk-login-label" htmlFor="login-password">Password</label>
+              <div className="lk-login-input-wrap">
+                <span className="lk-login-input-icon"><Lock size={18} strokeWidth={1.8} /></span>
+                <input
+                  id="login-password"
+                  className="lk-login-input"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="lk-login-toggle-vis"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} strokeWidth={1.8} /> : <Eye size={18} strokeWidth={1.8} />}
+                </button>
+              </div>
+            </div>
+
+            <button className="lk-login-submit" type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner />
+                  Signing in...
+                </>
               ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
+                <>
+                  Sign In
+                  <ArrowRight size={16} strokeWidth={2.2} />
+                </>
               )}
             </button>
+          </form>
+
+          <div className="lk-login-footer">
+            <span>ForgeKey License Manager</span>
+            <span className="lk-login-version">v0.1.0</span>
           </div>
-
-          <button className="btn btn-primary" type="submit" disabled={loading}
-            style={{ width: "100%", justifyContent: "center", padding: "10px var(--spacing-4)", fontSize: 14, marginTop: "var(--spacing-1)" }}
-          >
-            {loading ? (
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{
-                  width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "white", borderRadius: "50%",
-                  animation: "lm-spin 0.6s linear infinite",
-                }} />
-                Signing in...
-              </span>
-            ) : (
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3" />
-                </svg>
-                Sign In
-              </span>
-            )}
-          </button>
-        </form>
-
-        <div className="login-footer">
-          <p>NexTest License Manager <span>v0.1.0</span></p>
         </div>
       </div>
     </div>

@@ -46,8 +46,8 @@ export async function handleRazorpayWebhook(req, rawBody) {
     timestamp: new Date().toISOString(),
   });
 
-  // Queue for manual License Manager verification instead of auto-issuing a key.
-  // An admin will approve/reject in the License Manager's Verifications page.
+  // Queue for manual ForgeKey verification instead of auto-issuing a key.
+  // An admin will approve/reject in the ForgeKey Verifications page.
   const pendingReg = db.collection("pending_registrations");
   const pending = await pendingReg.findOne({ email: customerEmail.toLowerCase().trim() });
   if (pending) {

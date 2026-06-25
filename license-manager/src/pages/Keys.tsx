@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { api, type ProductKey } from "../lib/api";
+import { Plus, X, Search, Check, Copy, Mail, AlertCircle, Eye, Edit3, Ban, KeyRound } from "lucide-react";
 
 export function KeysPage() {
   const [keys, setKeys] = useState<ProductKey[]>([]);
@@ -93,7 +94,7 @@ export function KeysPage() {
       <div className="section-header">
         <h3>Product Keys</h3>
         <button className="btn btn-primary" onClick={() => setShowGenerate(true)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M12 4v16m8-8H4" /></svg>
+          <Plus size={14} strokeWidth={2.5} />
           Generate Keys
         </button>
       </div>
@@ -116,9 +117,7 @@ export function KeysPage() {
           </div>
           <div className="table-toolbar-right">
             <div className="form-search">
-              <svg className="form-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-              </svg>
+              <Search size={16} className="form-search-icon" strokeWidth={2} />
               <input
                 className="form-input"
                 placeholder="Search email..."
@@ -137,7 +136,7 @@ export function KeysPage() {
             <div className="modal-header">
               <h3>Generate Product Keys</h3>
               <button className="modal-close" onClick={() => setShowGenerate(false)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
             <div className="modal-body">
@@ -167,9 +166,7 @@ export function KeysPage() {
           <div className="empty-state"><p>Loading keys...</p></div>
         ) : keys.length === 0 ? (
           <div className="empty-state">
-            <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
+            <KeyRound size={40} strokeWidth={1.5} className="empty-state-icon" />
             <h3>No product keys yet</h3>
             <p>Generate your first batch of keys to get started.</p>
           </div>
@@ -196,9 +193,9 @@ export function KeysPage() {
                           onClick={(e) => { e.stopPropagation(); handleCopy(k.key); }}
                           title={copiedKey === k.key ? "Copied!" : "Copy to clipboard"}>
                           {copiedKey === k.key ? (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                            <Check size={12} strokeWidth={2.5} />
                           ) : (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                            <Copy size={12} strokeWidth={2} />
                           )}
                         </button>
                         <span className="key-value">{k.key}</span>
@@ -214,17 +211,17 @@ export function KeysPage() {
                         {k.status === "available" && (
                           <>
                             <button className="btn btn-sm btn-secondary" onClick={() => handleSendEmail(k)} title="Send via email">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                              <Mail size={12} strokeWidth={2} />
                               Email
                             </button>
                             <button className="btn btn-sm btn-danger" onClick={() => handleRevoke(k.key)} title="Revoke this key">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                              <Ban size={12} strokeWidth={2} />
                               Revoke
                             </button>
                           </>
                         )}
                         <button className="btn btn-sm btn-secondary" onClick={() => setDetailKey(k)} title="View details">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+                          <Eye size={12} strokeWidth={2} />
                           Details
                         </button>
                       </div>
@@ -244,7 +241,7 @@ export function KeysPage() {
             <div className="drawer-header">
               <h3>Key Details</h3>
               <button className="modal-close" onClick={() => setDetailKey(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
             <div className="drawer-body">
@@ -259,9 +256,9 @@ export function KeysPage() {
                 <div style={{ marginTop: 8 }}>
                   <button className="key-copy-btn" onClick={() => handleCopy(detailKey.key)} title="Copy key" style={{ width: "auto", padding: "4px 12px", gap: 6 }}>
                     {copiedKey === detailKey.key ? (
-                      <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg> Copied</>
+                      <><Check size={12} strokeWidth={2.5} /> Copied</>
                     ) : (
-                      <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg> Copy</>
+                      <><Copy size={12} strokeWidth={2} /> Copy</>
                     )}
                   </button>
                 </div>
@@ -300,17 +297,17 @@ export function KeysPage() {
 
               <div className="action-row" style={{ marginTop: 24 }}>
                 <button className="btn btn-primary btn-sm" onClick={() => { setSelectedKey(detailKey); setDetailKey(null); }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  <Edit3 size={12} strokeWidth={2} />
                   Edit Key
                 </button>
                 {detailKey.status === "available" && (
                   <>
                     <button className="btn btn-primary btn-sm" onClick={() => handleSendEmail(detailKey)}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      <Mail size={12} strokeWidth={2} />
                       Send Email
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleRevoke(detailKey.key)}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                      <Ban size={12} strokeWidth={2} />
                       Revoke
                     </button>
                   </>
@@ -327,11 +324,11 @@ export function KeysPage() {
             <div className="modal-header">
               <h3>Edit Key</h3>
               <button className="modal-close" onClick={() => setSelectedKey(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
             <div className="modal-body">
-              <form onSubmit={async (e) => { e.preventDefault(); /* reuse existing update */ }} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <form onSubmit={async (e) => { e.preventDefault(); }} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div className="form-group">
                   <label>Notes</label>
                   <input className="form-input" defaultValue={selectedKey.notes || ""} id="key-notes" placeholder="Purchase order, campaign, etc." />
@@ -367,9 +364,9 @@ export function KeysPage() {
         <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>
             {toast.type === "success" ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+              <Check size={18} strokeWidth={2} />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+              <AlertCircle size={18} strokeWidth={2} />
             )}
             {toast.message}
           </div>
@@ -378,3 +375,4 @@ export function KeysPage() {
     </div>
   );
 }
+

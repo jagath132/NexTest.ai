@@ -75,7 +75,7 @@ async function main() {
   });
 
   server.listen(PORT, "0.0.0.0", () => {
-    console.log(`License Manager production server running on http://0.0.0.0:${PORT}`);
+    console.log(`ForgeKey production server running on http://0.0.0.0:${PORT}`);
   });
 }
 

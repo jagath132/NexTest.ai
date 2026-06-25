@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { api } from "../lib/api";
+import { Download, Search, Mail, Check, X, AlertCircle, Copy, Repeat, ChevronDown, ChevronRight, ChevronLeft, XCircle } from "lucide-react";
 
 type EmailEntry = {
   id: string; to: string; subject: string; productKey: string;
@@ -156,9 +157,9 @@ export function EmailLogPage() {
   };
 
   const statusIcon = (status: string) => {
-    if (status === "sent") return <polyline points="20 6 9 17 4 12" />;
-    if (status === "failed") return <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>;
-    return <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>;
+    if (status === "sent") return <Check size={14} strokeWidth={2.5} />;
+    if (status === "failed") return <X size={14} strokeWidth={2.5} />;
+    return <AlertCircle size={14} strokeWidth={2.5} />;
   };
 
   return (
@@ -173,9 +174,7 @@ export function EmailLogPage() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn btn-secondary btn-sm" onClick={handleExport} disabled={logs.length === 0}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
+            <Download size={14} strokeWidth={2} />
             Export CSV
           </button>
         </div>
@@ -184,9 +183,7 @@ export function EmailLogPage() {
       {/* Toolbar */}
       <div className="el-toolbar">
         <div className="el-search-wrap">
-          <svg className="el-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+          <Search size={16} className="el-search-icon" strokeWidth={2} />
           <input ref={searchRef} className="el-search-input" type="text" placeholder="Search by email or product key..."
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
@@ -207,9 +204,7 @@ export function EmailLogPage() {
           <div className="empty-state"><p>Loading email logs...</p></div>
         ) : logs.length === 0 ? (
           <div className="empty-state">
-            <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            <Mail size={40} strokeWidth={1.5} className="empty-state-icon" />
             <h3>No emails found</h3>
             <p>Try adjusting your search or filters.</p>
           </div>
@@ -226,9 +221,7 @@ export function EmailLogPage() {
                     <div className={`el-group-head ${status}`} onClick={() => toggleGroup(gkey)}>
                       <div className="el-group-icon-col">
                         <div className={`el-group-dot ${status}`}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-                            {statusIcon(status)}
-                          </svg>
+                          {statusIcon(status)}
                         </div>
                         <div className="el-group-line" />
                       </div>
@@ -246,12 +239,12 @@ export function EmailLogPage() {
                         <button className="el-copy-btn" onClick={(e) => { e.stopPropagation(); handleCopyKey(g.productKey); }}
                           title="Copy product key">
                           {copiedKey === g.productKey ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                            <Check size={14} strokeWidth={2.5} style={{ color: "var(--color-success)" }} />
                           ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                            <Copy size={14} strokeWidth={2} />
                           )}
                         </button>
-                        <svg className={`el-chevron${isExpanded ? " open" : ""}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9" /></svg>
+                        <ChevronDown size={16} className={`el-chevron${isExpanded ? " open" : ""}`} strokeWidth={2} />
                       </div>
                     </div>
 
@@ -278,14 +271,12 @@ export function EmailLogPage() {
                                   {resending === entry.id ? (
                                     <span className="el-spinner" />
                                   ) : (
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                                      <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                                    </svg>
+                                    <Repeat size={14} strokeWidth={2} />
                                   )}
                                   Resend
                                 </button>
                               )}
-                              <svg className="el-entry-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="9 18 15 12 9 6" /></svg>
+                              <ChevronRight size={14} className="el-entry-arrow" strokeWidth={2} />
                             </div>
                           </div>
                         ))}
@@ -302,13 +293,13 @@ export function EmailLogPage() {
                 <span className="el-page-info">{total} total entries</span>
                 <div className="el-page-controls">
                   <button className="el-page-btn" disabled={page <= 1} onClick={() => loadLogs(page - 1)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="15 18 9 12 15 6" /></svg>
+                    <ChevronLeft size={14} strokeWidth={2} />
                     Previous
                   </button>
                   <span className="el-page-num">Page {page}</span>
                   <button className="el-page-btn" onClick={() => loadLogs(page + 1)}>
                     Next
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="9 18 15 12 9 6" /></svg>
+                    <ChevronRight size={14} strokeWidth={2} />
                   </button>
                 </div>
               </div>
@@ -322,9 +313,9 @@ export function EmailLogPage() {
         <div className="toast-container" style={{ position: "fixed", bottom: 24, right: 24, zIndex: 500 }}>
           <div className={`toast toast-${toast.type}`}>
             {toast.type === "success" ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+              <Check size={18} strokeWidth={2} />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+              <XCircle size={18} strokeWidth={2} />
             )}
             {toast.message}
           </div>
@@ -338,7 +329,7 @@ export function EmailLogPage() {
             <div className="drawer-header">
               <h3>Email Details</h3>
               <button className="modal-close" onClick={() => setDrawerEntry(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={18} strokeWidth={2} />
               </button>
             </div>
             <div className="drawer-body">
@@ -356,9 +347,9 @@ export function EmailLogPage() {
                   <span className="el-drawer-key">{drawerEntry.productKey}</span>
                   <button className="el-copy-btn" onClick={() => handleCopyKey(drawerEntry.productKey)} title="Copy">
                     {copiedKey === drawerEntry.productKey ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                      <Check size={14} strokeWidth={2.5} style={{ color: "var(--color-success)" }} />
                     ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                      <Copy size={14} strokeWidth={2} />
                     )}
                   </button>
                 </div>

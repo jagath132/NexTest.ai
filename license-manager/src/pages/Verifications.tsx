@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { api, type PendingRegistration } from "../lib/api";
+import { RefreshCw, Info, ShieldCheck, Clock, Calendar, Layout, Check, X, XCircle } from "lucide-react";
 
 const PLAN_LABELS: Record<string, string> = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
 const PLAN_COLORS: Record<string, string> = {
@@ -85,18 +86,13 @@ export function VerificationsPage() {
           )}
         </div>
         <button className="btn btn-secondary" onClick={load}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-            <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-          </svg>
+          <RefreshCw size={14} strokeWidth={2} />
           Refresh
         </button>
       </div>
 
       <div className="info-banner">
-        <svg className="info-banner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
+        <Info size={18} className="info-banner-icon" strokeWidth={2} />
         <div>
           <div className="info-banner-title">Manual Verification Required</div>
           <div className="info-banner-text">
@@ -123,9 +119,7 @@ export function VerificationsPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="empty-state">
-          <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <ShieldCheck size={40} strokeWidth={1.5} className="empty-state-icon" />
           <h3>{filter === "pending_verification" ? "All Clear!" : "No Registrations"}</h3>
           <p>{filter === "pending_verification" ? "No pending verifications at this time." : "No registration records found."}</p>
         </div>
@@ -144,17 +138,17 @@ export function VerificationsPage() {
                 <div className="email">{item.email}</div>
                 <div className="verification-meta">
                   <div className="verification-meta-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /></svg>
+                    <Clock size={14} strokeWidth={2} />
                     <span style={{ color: item.plan ? PLAN_COLORS[item.plan] : "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", fontSize: 11, letterSpacing: "0.05em" }}>
                       {item.plan ? PLAN_LABELS[item.plan] : "—"}
                     </span>
                   </div>
                   <div className="verification-meta-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 1v8m0 0V1zm0 8l-3-3m3 3l3-3" /></svg>
+                    <Calendar size={14} strokeWidth={2} />
                     {new Date(item.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                   </div>
                   <div className="verification-meta-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+                    <Layout size={14} strokeWidth={2} />
                     <span className={`badge badge-${item.paymentStatus === "completed" ? "used" : "available"}`} style={{ fontSize: 10 }}>
                       {item.paymentStatus}
                     </span>
@@ -177,9 +171,7 @@ export function VerificationsPage() {
                     {actionLoading === item.pendingId ? (
                       <div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite" }} />
                     ) : (
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                      <Check size={13} strokeWidth={2.5} />
                     )}
                     Approve
                   </button>
@@ -189,9 +181,7 @@ export function VerificationsPage() {
                     onClick={() => { setSelectedItem(item); setRejectReason(""); }}
                     title="Reject this registration"
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <X size={13} strokeWidth={2.5} />
                     Reject
                   </button>
                 </div>
@@ -211,7 +201,7 @@ export function VerificationsPage() {
             <div className="modal-header">
               <h3>Reject Registration</h3>
               <button className="modal-close" onClick={() => setSelectedItem(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={18} strokeWidth={2} />
               </button>
             </div>
             <div className="modal-body">
@@ -256,9 +246,9 @@ export function VerificationsPage() {
         <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>
             {toast.type === "success" ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+              <Check size={18} strokeWidth={2} />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+              <XCircle size={18} strokeWidth={2} />
             )}
             {toast.message}
           </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Transaction } from "../lib/api";
+import { CreditCard, DollarSign, CheckCircle, Layers } from "lucide-react";
 
 export function PaymentsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -30,9 +31,7 @@ export function PaymentsPage() {
         <div className="empty-state"><p>Loading transactions...</p></div>
       ) : transactions.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: "60px 24px" }}>
-          <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-          </svg>
+          <CreditCard size={40} strokeWidth={1.5} className="empty-state-icon" />
           <h3>No transactions yet</h3>
           <p style={{ marginBottom: 24 }}>Payment transactions will appear here when customers purchase via Stripe or Razorpay.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -57,7 +56,7 @@ export function PaymentsPage() {
               <div className="top">
                 <span className="label">Total Revenue</span>
                 <div className="icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 1v8m0 8v-8m0 0V1zm0 8l-3-3m3 3l3-3" /></svg>
+                  <DollarSign size={14} strokeWidth={2} />
                 </div>
               </div>
               <div className="value">${totalRevenue.toFixed(2)}</div>
@@ -67,7 +66,7 @@ export function PaymentsPage() {
               <div className="top">
                 <span className="label">Successful</span>
                 <div className="icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+                  <CheckCircle size={14} strokeWidth={2} />
                 </div>
               </div>
               <div className="value">{successfulTx}</div>
@@ -77,7 +76,7 @@ export function PaymentsPage() {
               <div className="top">
                 <span className="label">Providers</span>
                 <div className="icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /></svg>
+                  <Layers size={14} strokeWidth={2} />
                 </div>
               </div>
               <div className="value">

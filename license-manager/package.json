@@ -1,5 +1,5 @@
 {
-  "name": "nextest-license-manager",
+  "name": "forgekey",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -16,6 +16,7 @@
   "dependencies": {
     "axios": "^1.16.1",
     "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.21.0",
     "mongodb": "^7.2.0",
     "nodemailer": "^6.9.0",
     "react": "19.2.4",

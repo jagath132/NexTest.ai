@@ -2,6 +2,19 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { api, type KeyStats } from "../lib/api";
 import { useAdminStore } from "../store/useAdminStore";
 import type { Page } from "../App";
+import {
+  KeyRound,
+  CheckCircle2,
+  Sparkles,
+  Clock,
+  AlertTriangle,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  Check,
+  X,
+  ArrowUpRight,
+} from "lucide-react";
 
 type Activity = { type: "key_generated" | "key_used" | "registration" | "approved" | "rejected"; desc: string; time: Date };
 
@@ -30,26 +43,26 @@ function useCountUp(end: number, duration = 900, delay = 0): number {
 }
 
 type KpiMeta = {
-  label: string; value: number; trend: number; trendLabel: string; icon: string; colorClass: string; extra?: string;
+  label: string; value: number; trend: number; trendLabel: string; icon: React.ElementType; colorClass: string; extra?: string;
 };
+
+const ICON_SIZE = 16;
 
 function KpiTile({ meta, index }: { meta: KpiMeta; index: number }) {
   const count = useCountUp(meta.value, 800, index * 80);
+  const Icon = meta.icon;
+  const TrendIcon = meta.trend >= 0 ? TrendingUp : TrendingDown;
   return (
     <div className={`db-kpi db-kpi-${meta.colorClass}`} style={{ animationDelay: `${index * 80}ms` }}>
       <div className="db-kpi-top">
         <span className="db-kpi-label">{meta.label}</span>
-        <svg className="db-kpi-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d={meta.icon} />
-        </svg>
+        <Icon size={ICON_SIZE} strokeWidth={1.5} className="db-kpi-icon" />
       </div>
       <div className="db-kpi-row">
         <span className="db-kpi-value">{count.toLocaleString()}</span>
         {meta.value > 0 && (
           <span className={`db-kpi-trend ${meta.trend >= 0 ? "up" : "down"}`}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              {meta.trend >= 0 ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
-            </svg>
+            <TrendIcon size={12} strokeWidth={2.5} />
             {Math.abs(meta.trend)}%
           </span>
         )}
@@ -128,7 +141,6 @@ function PlanDistribution({ data }: { data: { plan: string; count: number; color
   return (
     <div className="db-widget-card db-plan-widget">
       <h3 className="db-card-title">Plan Distribution</h3>
-      {/* Plan data: grouped from /api/admin/verifications (all registrations). For complete accuracy, add server-side join with users collection. */}
       {data.length === 0 ? (
         <div className="db-empty-small">No plan data yet</div>
       ) : (
@@ -157,6 +169,7 @@ function PendingApprovalsWidget({ items, onNavigate, onApprove, onReject, loadin
         <h3 className="db-card-title">Pending Approvals</h3>
         <button className="db-ghost-btn" onClick={() => onNavigate?.("verifications")}>
           View all
+          <ArrowUpRight size={12} strokeWidth={2} style={{ marginLeft: 2 }} />
         </button>
       </div>
       {items.length === 0 ? (
@@ -173,10 +186,10 @@ function PendingApprovalsWidget({ items, onNavigate, onApprove, onReject, loadin
               </div>
               <div className="db-pending-actions">
                 <button className="db-btn-icon approve" disabled={loading} onClick={() => onApprove(item.pendingId)} title="Approve">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                  <Check size={14} strokeWidth={2.5} />
                 </button>
                 <button className="db-btn-icon reject" disabled={loading} onClick={() => onReject(item)} title="Reject">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  <X size={14} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
@@ -334,12 +347,12 @@ export function DashboardPage({ onNavigate }: { onNavigate?: (page: Page) => voi
   const regTrend = prevWeekRegs > 0 ? Math.round(((recentRegistrations - prevWeekRegs) / prevWeekRegs) * 100) : recentRegistrations > 0 ? 100 : 0;
 
   const kpiItems: KpiMeta[] = [
-    { label: "Total Keys", value: stats.total, trend: genTrend, trendLabel: "vs last week", icon: "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z", colorClass: "accent", extra: `${recentKeys} new this week` },
-    { label: "Activated", value: stats.used, trend: 0, trendLabel: `of ${stats.total} total`, icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", colorClass: "success", extra: `${activationPct(stats)}% activation rate` },
-    { label: "Available", value: stats.available, trend: 0, trendLabel: "ready to assign", icon: "M5 13l4 4L19 7", colorClass: "info", extra: stats.available > 0 ? "Ready to assign" : "None available" },
-    { label: "Pending", value: pendingCount, trend: 0, trendLabel: "awaiting review", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", colorClass: "warning", extra: pendingCount > 0 ? "Awaiting review" : "All clear" },
-    { label: "Expired", value: stats.expired, trend: 0, trendLabel: "inactive keys", icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z", colorClass: "danger", extra: stats.expired > 0 ? "Inactive keys" : "No expired keys" },
-    { label: "Registered Users", value: totalUsers, trend: regTrend, trendLabel: "vs last week", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z", colorClass: "primary", extra: `${recentRegistrations} new this week` },
+    { label: "Total Keys", value: stats.total, trend: genTrend, trendLabel: "vs last week", icon: KeyRound, colorClass: "accent", extra: `${recentKeys} new this week` },
+    { label: "Activated", value: stats.used, trend: 0, trendLabel: `of ${stats.total} total`, icon: CheckCircle2, colorClass: "success", extra: `${activationPct(stats)}% activation rate` },
+    { label: "Available", value: stats.available, trend: 0, trendLabel: "ready to assign", icon: Sparkles, colorClass: "info", extra: stats.available > 0 ? "Ready to assign" : "None available" },
+    { label: "Pending", value: pendingCount, trend: 0, trendLabel: "awaiting review", icon: Clock, colorClass: "warning", extra: pendingCount > 0 ? "Awaiting review" : "All clear" },
+    { label: "Expired", value: stats.expired, trend: 0, trendLabel: "inactive keys", icon: AlertTriangle, colorClass: "danger", extra: stats.expired > 0 ? "Inactive keys" : "No expired keys" },
+    { label: "Registered Users", value: totalUsers, trend: regTrend, trendLabel: "vs last week", icon: Users, colorClass: "primary", extra: `${recentRegistrations} new this week` },
   ];
 
   const handleApprove = useCallback(async (pendingId: string) => {
@@ -372,12 +385,10 @@ export function DashboardPage({ onNavigate }: { onNavigate?: (page: Page) => voi
 
   return (
     <div className="db-root">
-      {/* Compact KPI strip */}
       <div className="db-kpi-strip">
         {kpiItems.map((meta, i) => <KpiTile key={meta.label} meta={meta} index={i} />)}
       </div>
 
-      {/* Secondary row: 3 widgets */}
       <div className="db-widget-row">
         <KeyStatusDonut stats={stats} animate={animate} />
         <PlanDistribution data={planData} />
@@ -390,16 +401,14 @@ export function DashboardPage({ onNavigate }: { onNavigate?: (page: Page) => voi
         />
       </div>
 
-      {/* Activity */}
       <ActivityTimeline items={activity} filter={activityFilter} onFilterChange={setActivityFilter} />
 
-      {/* Empty state */}
       {stats.total === 0 && (
         <div className="db-empty-state">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ opacity: 0.35 }}>
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
           </svg>
-          <h3>Welcome to License Manager</h3>
+          <h3>Welcome to ForgeKey</h3>
           <p>Get started by generating your first batch of product keys.</p>
           <button className="btn btn-primary" onClick={() => onNavigate?.("keys")}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 4v16m8-8H4" /></svg>
@@ -408,18 +417,17 @@ export function DashboardPage({ onNavigate }: { onNavigate?: (page: Page) => voi
         </div>
       )}
 
-      {/* Reject modal */}
       {rejectTarget && (
         <div className="modal-overlay" onClick={() => setRejectTarget(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
             <div className="modal-header">
               <h3>Reject Registration</h3>
               <button className="modal-close" onClick={() => setRejectTarget(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
             <div className="modal-body">
-              <div style={{ marginBottom: 16, padding: "12px 16px", background: "var(--color-bg)", borderRadius: "var(--radius)", border: "1px solid var(--color-border)" }}>
+              <div style={{ marginBottom: 16, padding: "12px 16px", background: "var(--color-elevated)", borderRadius: "var(--radius)", border: "1px solid var(--color-border)" }}>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2, color: "var(--color-text-primary)" }}>{rejectTarget.name}</div>
                 <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{rejectTarget.email}</div>
               </div>

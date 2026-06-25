@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Plan } from "../lib/api";
 import { PlanModal } from "../components/PlanModal";
+import { LayoutGrid, Table2, Plus, Settings, Package, Check } from "lucide-react";
 
 export function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -37,15 +38,15 @@ export function PlansPage() {
         <h3>Plans</h3>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button className={`plan-table-toggle${viewMode === "cards" ? " active" : ""}`} onClick={() => setViewMode("cards")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+            <LayoutGrid size={14} strokeWidth={2} />
             Cards
           </button>
           <button className={`plan-table-toggle${viewMode === "table" ? " active" : ""}`} onClick={() => setViewMode("table")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
+            <Table2 size={14} strokeWidth={2} />
             Table
           </button>
           <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M12 4v16m8-8H4" /></svg>
+            <Plus size={14} strokeWidth={2} />
             Create Plan
           </button>
         </div>
@@ -55,9 +56,7 @@ export function PlansPage() {
         <div className="empty-state"><p>Loading plans...</p></div>
       ) : plans.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: "60px 24px" }}>
-          <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
+          <Package size={40} strokeWidth={1.5} className="empty-state-icon" />
           <h3>No plans defined</h3>
           <p>Create your first plan to define pricing tiers.</p>
           <button className="btn btn-primary" onClick={() => setShowCreate(true)} style={{ marginTop: 16 }}>
@@ -90,7 +89,7 @@ export function PlansPage() {
                   <div className="plan-card-features">
                     {p.features.slice(0, 5).map((f, i) => (
                       <div key={i} className="plan-card-feature">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                        <Check size={14} strokeWidth={2.5} />
                         {f}
                       </div>
                     ))}
@@ -102,8 +101,8 @@ export function PlansPage() {
                   </div>
                 </div>
                 <div className="plan-card-footer">
-                  <button className="btn btn-primary btn-sm" onClick={() => setEditPlan(p)}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+                      <button className="btn btn-primary btn-sm" onClick={() => setEditPlan(p)}>
+                    <Settings size={12} strokeWidth={2} />
                     Manage
                   </button>
                 </div>
@@ -168,7 +167,7 @@ export function PlansPage() {
                     </td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <button className="btn btn-sm btn-secondary" onClick={() => setEditPlan(p)}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+                        <Settings size={12} strokeWidth={2} />
                         Manage
                       </button>
                     </td>

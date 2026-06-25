@@ -38,7 +38,6 @@ export const adminStore = {
     const existing = await this.findByEmail(email);
     if (!existing) {
       await this.createAdmin({ email, password });
-      console.log(`Default admin created: ${email}`);
     }
   },
 };

@@ -42,8 +42,8 @@ export async function sendProductKeyEmail(toEmail, productKey, customerName, com
   }
   const transporter = await getTransporter();
 
-  const from = process.env.SMTP_FROM || "noreply@nextest.app";
-  const subject = "Your NexTest Product Key";
+  const from = process.env.SMTP_FROM || "noreply@forgekey.app";
+  const subject = "Your ForgeKey Product Key";
   const buttonUrl = completeUrl || (process.env.APP_URL || "http://127.0.0.1:5173") + "/auth/complete-registration?email=" + encodeURIComponent(toEmail);
 
   const html = `
@@ -51,19 +51,19 @@ export async function sendProductKeyEmail(toEmail, productKey, customerName, com
 <html>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #7c3aed;">NexTest</h1>
-    <p style="color: #666;">License Activation</p>
+    <h1 style="color: #F59E0B;">ForgeKey</h1>
+    <p style="color: #888;">License Activation</p>
   </div>
   <p>Hello${customerName ? " " + customerName : ""},</p>
-  <p>Thank you for purchasing NexTest! Your product key is:</p>
-  <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f5f3ff; border-radius: 8px; border: 2px dashed #7c3aed;">
-    <h2 style="font-family: 'Courier New', monospace; letter-spacing: 3px; color: #7c3aed; font-size: 24px; margin: 0;">${productKey}</h2>
+  <p>Thank you for purchasing ForgeKey! Your product key is:</p>
+  <div style="text-align: center; margin: 30px 0; padding: 20px; background: #1a1a1a; border-radius: 8px; border: 2px dashed #F59E0B;">
+    <h2 style="font-family: 'Courier New', monospace; letter-spacing: 3px; color: #FBBF24; font-size: 24px; margin: 0;">${productKey}</h2>
   </div>
   <p>To activate your license, click the button below:</p>
   <div style="text-align: center; margin: 30px 0;">
-    <a href="${buttonUrl}" style="display: inline-block; padding: 14px 32px; background: #7c3aed; color: #fff; font-size: 16px; font-weight: 600; border-radius: 8px; text-decoration: none;">Complete Registration</a>
+    <a href="${buttonUrl}" style="display: inline-block; padding: 14px 32px; background: #F59E0B; color: #fff; font-size: 16px; font-weight: 600; border-radius: 8px; text-decoration: none;">Complete Registration</a>
   </div>
-  <p style="color: #666; font-size: 12px; margin-top: 40px;">If you did not purchase NexTest, please ignore this email.</p>
+  <p style="color: #888; font-size: 12px; margin-top: 40px;">If you did not purchase ForgeKey, please ignore this email.</p>
 </body>
 </html>`;
 

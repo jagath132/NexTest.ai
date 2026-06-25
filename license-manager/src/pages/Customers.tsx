@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Customer, type EmailLog } from "../lib/api";
+import { Search, X, Loader2 } from "lucide-react";
 
 export function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -44,9 +45,7 @@ export function CustomersPage() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="form-search">
-          <svg className="form-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-          </svg>
+          <Search size={16} className="form-search-icon" strokeWidth={2} />
           <input
             className="form-input"
             placeholder="Search customers by email..."
@@ -117,7 +116,7 @@ export function CustomersPage() {
             <div className="drawer-header">
               <h3>Customer Profile</h3>
               <button className="modal-close" onClick={() => setDetailCustomer(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6L6 18M6 6l12 12" /></svg>
+                <X size={18} strokeWidth={2} />
               </button>
             </div>
             <div className="drawer-body">
@@ -170,7 +169,7 @@ export function CustomersPage() {
 
               {loadingDetail ? (
                 <div style={{ textAlign: "center", padding: 20 }}>
-                  <div style={{ width: 20, height: 20, border: "2px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "lm-spin 0.8s linear infinite", display: "inline-block" }} />
+                  <Loader2 size={20} className="lm-spin" strokeWidth={2} style={{ margin: "0 auto" }} />
                 </div>
               ) : customerEmailLogs.length > 0 ? (
                 <div>
