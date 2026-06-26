@@ -4,7 +4,7 @@ import { getDb } from "../db.js";
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
-const FROM = process.env.RESEND_FROM || "ForgeKey <noreply@forgekey.app>";
+const FROM = process.env.RESEND_FROM || "ForgeKey <onboarding@resend.dev>";
 
 function logColl() {
   return getDb().collection("email_logs");
