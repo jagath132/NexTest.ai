@@ -117,7 +117,9 @@ export function createApiMiddleware(env) {
           const keys = await generateProductKeys(1, { customerEmail: email, notes: "Free plan registration" });
           const key = keys[0];
           const { sendProductKeyEmail } = await import("./email/service.js");
-          await sendProductKeyEmail(email, key, name || "");
+          const appUrl = process.env.NEXTEST_APP_URL || "http://127.0.0.1:5173";
+          const completeUrl = `${appUrl}/auth/complete-registration?email=${encodeURIComponent(email)}&key=${key}`;
+          await sendProductKeyEmail(email, key, name || "", completeUrl);
           sendJson(res, 200, { key, email });
         } catch (err) {
           sendJson(res, 500, { error: err.message });
@@ -165,7 +167,9 @@ export function createApiMiddleware(env) {
           return;
         }
         try {
-          await sendProductKeyEmail(to, productKey, customerName);
+          const appUrl = process.env.NEXTEST_APP_URL || "http://127.0.0.1:5173";
+          const completeUrl = `${appUrl}/auth/complete-registration?email=${encodeURIComponent(to)}&key=${productKey}`;
+          await sendProductKeyEmail(to, productKey, customerName, completeUrl);
           await logAudit({ adminId: admin.id, adminEmail: admin.email, action: "send_email", resource: "email", details: { to, productKey }, ip: clientIp });
           sendJson(res, 200, { ok: true });
         } catch (err) {
@@ -511,7 +515,9 @@ export function createApiMiddleware(env) {
         const keys = await generateProductKeys(1, { customerEmail: pending.email, notes: `${pending.plan || "free"} plan approval` });
         const productKey = keys[0];
         // Email the key to the user
-        await sendProductKeyEmail(pending.email, productKey, pending.name || "");
+        const appUrl = process.env.NEXTEST_APP_URL || "http://127.0.0.1:5173";
+        const completeUrl = `${appUrl}/auth/complete-registration?email=${encodeURIComponent(pending.email)}&key=${productKey}`;
+        await sendProductKeyEmail(pending.email, productKey, pending.name || "", completeUrl);
         // Update the pending registration status to "ready" with the key
         await db.collection("pending_registrations").updateOne(
           { pendingId },
