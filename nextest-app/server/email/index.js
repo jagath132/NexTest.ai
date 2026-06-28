@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { sendProductKeyEmailResend, sendPasswordResetEmailResend } from "./resend.js";
+import { sendProductKeyEmailResend, sendPasswordResetEmailResend, sendSupportEmailResend } from "./resend.js";
 
 let etherealTransporter = null;
 
@@ -113,6 +113,56 @@ export async function sendProductKeyEmail(to, productKey, customerName) {
     return true;
   } catch (err) {
     console.error("Failed to send product key email:", err.message);
+    return false;
+  }
+}
+
+export async function sendSupportEmail({ name, email, subject, message }) {
+  if (process.env.RESEND_API_KEY) {
+    return sendSupportEmailResend({ name, email, subject, message });
+  }
+  const adminEmail = process.env.SUPPORT_EMAIL || "admin@forgeqa.in";
+  const html = [
+    '<!DOCTYPE html><html><head><meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width,initial-scale=1">',
+    '</head><body style="margin:0;padding:0;background:#0a0a0f;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">',
+    '<tr><td align="center" style="padding:40px 20px">',
+    '<table role="presentation" width="480" cellpadding="0" cellspacing="0"',
+    ' style="background:#16161f;border:1px solid #2a2a3d;border-radius:16px;overflow:hidden">',
+    '<tr><td style="padding:32px 32px 0" align="center">',
+    '<h1 style="color:#ededf5;font-size:20px;font-weight:700;margin:0 0 4px">Support Request</h1>',
+    '<p style="color:#6b6b8a;font-size:13px;margin:0 0 24px">From the NexTest app</p>',
+    '</td></tr>',
+    '<tr><td style="padding:0 32px 32px">',
+    '<table width="100%" cellpadding="0" cellspacing="0">',
+    '<tr><td style="padding:8px 0"><span style="color:#6b6b8a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Name</span></td></tr>',
+    `<tr><td style="padding:0 0 12px;color:#ededf5;font-size:14px">${name}</td></tr>`,
+    '<tr><td style="padding:8px 0"><span style="color:#6b6b8a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Email</span></td></tr>',
+    `<tr><td style="padding:0 0 12px;color:#ededf5;font-size:14px">${email}</td></tr>`,
+    '<tr><td style="padding:8px 0"><span style="color:#6b6b8a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Subject</span></td></tr>',
+    `<tr><td style="padding:0 0 12px;color:#ededf5;font-size:14px">${subject || "Support Request"}</td></tr>`,
+    '<tr><td style="padding:8px 0"><span style="color:#6b6b8a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Message</span></td></tr>',
+    `<tr><td style="padding:0 0 12px;color:#ededf5;font-size:14px;line-height:1.6">${message}</td></tr>`,
+    '</table></td></tr></table>',
+    '<p style="color:#4a4a5a;font-size:11px;margin-top:24px">',
+    `&copy; ${new Date().getFullYear()} NexTest. All rights reserved.</p>`,
+    '</td></tr></table></body></html>',
+  ].join("");
+
+  try {
+    const transport = await getTransport();
+    await transport.sendMail({
+      from: `"${BRAND}" <${FROM}>`,
+      to: adminEmail,
+      replyTo: email,
+      subject: `[Support] ${subject || "Support Request"} — from ${name}`,
+      html,
+    });
+    console.log(`Support email sent via SMTP from ${email}`);
+    return true;
+  } catch (err) {
+    console.error("Failed to send support email:", err.message);
     return false;
   }
 }

@@ -53,8 +53,6 @@ export function createApiMiddleware(env) {
 
   let dbReady = connectDb().then(async () => {
     await adminStore.seedDefaultAdmin();
-  }).catch((err) => {
-    console.error("MongoDB connection failed:", err);
   });
 
   return async function apiMiddleware(req, res, next) {

@@ -4,7 +4,7 @@ import { getDb } from "../db.js";
 import { isDisposableEmail } from "./disposable-emails.js";
 import { authenticateToken, encryptApiKey, generateToken } from "./service.js";
 import { validateProductKey, claimProductKey, isValidKeyFormat } from "./productKeys.js";
-import { sendPasswordResetEmail } from "../email/index.js";
+import { sendPasswordResetEmail, sendSupportEmail } from "../email/index.js";
 import { checkRateLimit, checkAccountLockout, recordFailedAttempt, clearLockout } from "../rate-limit/index.js";
 import { verify2FA, is2FAEnabled } from "../2fa/index.js";
 import { getUserPlan } from "../billing/plans.js";
@@ -525,13 +525,6 @@ async function handleCompleteRegistration(req, res, body) {
     return;
   }
 
-  const db = getDb();
-  const pending = await db.collection("pending_registrations").findOne({ email: email.toLowerCase().trim() });
-  if (!pending) {
-    sendJson(res, 404, { error: "No pending registration found for this email. Please start over." });
-    return;
-  }
-
   const validKey = await validateProductKey(productKey);
   if (!validKey) {
     sendJson(res, 400, { error: "Product key is invalid, expired, or already used." });
@@ -544,16 +537,31 @@ async function handleCompleteRegistration(req, res, body) {
     return;
   }
 
-  const user = await authStore.createUserFromHash({
-    email: pending.email,
-    passwordHash: pending.passwordHash,
-    salt: pending.salt,
-    name: pending.name,
-  });
+  const db = getDb();
+  const pending = await db.collection("pending_registrations").findOne({ email: email.toLowerCase().trim() });
+
+  let user;
+  if (pending) {
+    user = await authStore.createUserFromHash({
+      email: pending.email,
+      passwordHash: pending.passwordHash,
+      salt: pending.salt,
+      name: pending.name,
+    });
+    await db.collection("pending_registrations").deleteOne({ email: email.toLowerCase().trim() });
+  } else {
+    const salt = crypto.randomBytes(16).toString("hex");
+    const randomPassword = crypto.randomBytes(32).toString("hex");
+    const passwordHash = crypto.pbkdf2Sync(randomPassword, salt, 600000, 64, "sha512").toString("hex");
+    user = await authStore.createUserFromHash({
+      email: email.toLowerCase().trim(),
+      passwordHash,
+      salt,
+      name: null,
+    });
+  }
 
   await claimProductKey(productKey, user.id, email);
-
-  await db.collection("pending_registrations").deleteOne({ email: email.toLowerCase().trim() });
 
   sendJson(res, 200, { ok: true });
 }
@@ -587,9 +595,29 @@ async function handleDeleteAccount(req, res, url, body, user) {
   sendJson(res, 200, { ok: true });
 }
 
+async function handleSupport(req, res, body) {
+  const { name, email, subject, message } = body;
+  if (!name || !email || !message) {
+    sendJson(res, 400, { error: "Name, email, and message are required." });
+    return;
+  }
+
+  try {
+    const ok = await sendSupportEmail({ name, email, subject: subject || "Support Request", message });
+    if (!ok) {
+      sendJson(res, 500, { error: "Failed to send support message." });
+      return;
+    }
+    sendJson(res, 200, { ok: true });
+  } catch (err) {
+    sendJson(res, 500, { error: err.message || "Failed to send support message." });
+  }
+}
+
 const ROUTE_CONFIG = [
   // Removed: old /api/auth/register (bypasses new registration flow). Use start-registration + select-plan + complete-registration instead.
   { path: "/api/auth/validate-key", method: "POST", handler: handleValidateKey, auth: false },
+  { path: "/api/auth/support", method: "POST", handler: handleSupport, auth: false },
   { path: "/api/auth/login", method: "POST", handler: handleLogin, auth: false },
   { path: "/api/auth/forgot-password", method: "POST", handler: handleForgotPassword, auth: false },
   { path: "/api/auth/logout", method: "POST", handler: handleLogout, auth: false },

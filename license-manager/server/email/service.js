@@ -59,11 +59,8 @@ export async function sendProductKeyEmail(toEmail, productKey, customerName, com
   <div style="text-align: center; margin: 30px 0; padding: 20px; background: #1a1a1a; border-radius: 8px; border: 2px dashed #F59E0B;">
     <h2 style="font-family: 'Courier New', monospace; letter-spacing: 3px; color: #FBBF24; font-size: 24px; margin: 0;">${productKey}</h2>
   </div>
-  <p>To activate your license, click the button below:</p>
-  <div style="text-align: center; margin: 30px 0;">
-    <a href="${buttonUrl}" style="display: inline-block; padding: 14px 32px; background: #F59E0B; color: #fff; font-size: 16px; font-weight: 600; border-radius: 8px; text-decoration: none;">Complete Registration</a>
-  </div>
-  <p style="color: #888; font-size: 12px; margin-top: 40px;">If you did not purchase ForgeKey, please ignore this email.</p>
+   <p style="margin: 24px 0 8px;"><a href="${buttonUrl}" style="color: #F59E0B; font-size: 14px;">Click here to activate your account &rarr;</a></p>
+   <p style="color: #888; font-size: 12px; margin-top: 24px;">If you did not purchase ForgeKey, please ignore this email.</p>
 </body>
 </html>`;
 

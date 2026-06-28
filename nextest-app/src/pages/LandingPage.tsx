@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Logo } from "../components/ui/Logo";
 import { useAppStore } from "../store/useAppStore";
 import { Moon, Sun, Check, ArrowRight, ChevronDown, Menu, X, Shield, FileText, Code, Brain, LayoutList, Download, MessageSquare } from "lucide-react";
@@ -193,6 +194,15 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
   const user = useAppStore((s) => s.user);
   const isAuthed = user !== null;
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("support") === "true") {
+      setTimeout(() => {
+        document.getElementById("support-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [searchParams]);
 
   /* Support form */
   const [supportForm, setSupportForm] = useState({ name: "", email: "", subject: "Technical Support", message: "" });
@@ -547,7 +557,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
 
 
       {/* ── Contact form ── */}
-      <section className="max-w-5xl mx-auto px-6 lg:px-10" style={{ paddingBottom: "var(--section-spacing)" }}>
+      <section id="support-form" className="max-w-5xl mx-auto px-6 lg:px-10" style={{ paddingBottom: "var(--section-spacing)" }}>
         <ScrollReveal>
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold" style={{ background: "rgba(47,214,117,0.1)", color: "var(--signal-green)", border: "1px solid rgba(47,214,117,0.2)" }}>

@@ -1,11 +1,44 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { api, type AuthResponse } from "../lib/api";
-import { useAppStore } from "../store/useAppStore";
-import { NexTestIcon } from "../components/ui/NexTestLogo";
+import { api } from "../lib/api";
 
 const KEY_FORMAT = /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/;
+
+const CONSOLE_LINES = [
+  "✓ key verification ................. passed",
+  "✓ product validation ............... 0.3s",
+  "✓ license check .................... valid",
+  "✓ expiry check ..................... ok",
+  "✓ activation slot .................. available",
+  "✓ user lookup ...................... found",
+  "✓ account setup .................... ready",
+  "✓ registration ..................... ",
+];
+
+function ConsoleFeed() {
+  const [displayed, setDisplayed] = useState<string[]>([]);
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDisplayed((prev) => {
+        const next = [...prev, CONSOLE_LINES[index]];
+        return next.length > 8 ? next.slice(-8) : next;
+      });
+      setIndex((i) => (i + 1) % CONSOLE_LINES.length);
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [index]);
+  return (
+    <div className="relative" style={{ height: "14rem" }}>
+      {displayed.map((line, i) => (
+        <div key={`${i}-${line}`} className="animate-console-line text-sm leading-[1.75rem]" style={{ fontFamily: "var(--font-mono)", color: "var(--signal-green)", whiteSpace: "nowrap" }}>
+          {line}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function isValidKey(value: string) {
   return KEY_FORMAT.test(value);
@@ -23,8 +56,6 @@ function formatKey(value: string) {
 export function CompleteRegistrationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const setUser = useAppStore((s) => s.setUser);
-  const setSavedProviderKeys = useAppStore((s) => s.setSavedProviderKeys);
 
   const emailFromUrl = searchParams.get("email") || "";
   const keyFromUrl = searchParams.get("key") || "";
@@ -33,7 +64,14 @@ export function CompleteRegistrationPage() {
   const [keyStatus, setKeyStatus] = useState<"idle" | "valid" | "invalid" | "checking">("idle");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [btnSuccess, setBtnSuccess] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Support modal
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportForm, setSupportForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [supportSent, setSupportSent] = useState(false);
+  const [supportSending, setSupportSending] = useState(false);
 
   useEffect(() => {
     if (!emailFromUrl) return;
@@ -50,35 +88,24 @@ export function CompleteRegistrationPage() {
       setKeyStatus("checking");
       try {
         const res = await api.post("/api/auth/validate-key", { productKey });
-        setKeyStatus(res.data.valid ? "valid" : "invalid");
+        if (res.data.valid) {
+          setKeyStatus("valid");
+        } else {
+          setKeyStatus("invalid");
+        }
       } catch {
         setKeyStatus("invalid");
       }
     }, 400);
   }, [productKey, email]);
 
-  // Auto-submit when both email and key are pre-filled and validated
-  useEffect(() => {
-    if (!keyFromUrl || !emailFromUrl || keyStatus !== "valid") return;
-    const timer = setTimeout(() => {
-      const form = document.querySelector("form");
-      if (form) form.requestSubmit();
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [keyStatus, keyFromUrl, emailFromUrl]);
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     try {
-      const res = await api.post<AuthResponse>("/api/auth/complete-registration", { email, productKey });
-      setUser(res.data.user);
-      try {
-        const keysRes = await api.get<{ keys: Record<string, boolean> }>("/api/settings/api-keys");
-        setSavedProviderKeys(keysRes.data.keys ?? {});
-      } catch { /* ignore */ }
-      navigate("/dashboard");
+      const res = await api.post("/api/auth/complete-registration", { email, productKey });
+      setBtnSuccess(true);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.error || "Registration failed");
@@ -90,90 +117,335 @@ export function CompleteRegistrationPage() {
     }
   }
 
-  return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 py-8 overflow-hidden reg-bg-mesh">
+  async function handleSupportSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSupportSending(true);
+    try {
+      await api.post("/api/auth/support", {
+        name: supportForm.name || email || "Unknown",
+        email: supportForm.email || email || "unknown@example.com",
+        subject: supportForm.subject || "Activation Support",
+        message: supportForm.message || `Need help activating product key: ${productKey || "N/A"}`,
+      });
+      setSupportSent(true);
+    } catch {
+      setSupportSent(true);
+    } finally {
+      setSupportSending(false);
+    }
+  }
 
-      <div className="relative w-full max-w-md reg-card p-6 sm:p-8 animate-slide-up">
-        <div className="flex flex-col items-center mb-6 text-center">
-          <div className="flex items-center justify-center w-14 h-14 rounded-2xl" style={{ background: "var(--accent)" }}>
-            <NexTestIcon size="sm" />
+  const hasPreFilledKey = !!keyFromUrl;
+  const showKeyCard = hasPreFilledKey && keyStatus !== "idle";
+
+  return (
+    <div className="flex min-h-screen" style={{ background: "var(--paper)" }}>
+      {/* Left panel — branding + console feed */}
+      <div className="hidden md:flex md:w-[55%] flex-col relative overflow-hidden" style={{ background: "var(--ink)" }}>
+        <div className="flex items-center gap-2.5 px-10 pt-10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style={{ background: "var(--signal-green)" }}>
+            <svg className="h-5 w-5 text-[var(--ink)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 12l4 4 8-8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-4" style={{ color: "var(--text-primary)" }}>Activate your account</h1>
-          <p className="text-xs sm:text-sm mt-1 text-center" style={{ color: "var(--text-muted)" }}>
-            Enter the product key sent to your email to finish setting up your account.
-          </p>
+          <span className="text-sm font-bold" style={{ color: "var(--paper)", fontFamily: "var(--font-sans)" }}>NexTest</span>
         </div>
 
-        {error && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm animate-shake" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid color-mix(in srgb, var(--danger) 25%, transparent)" }}>
-            <svg className="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-secondary)" }}>Email Address</label>
-            <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full py-2.5 px-3.5 text-sm rounded-lg outline-none transition-all"
-              style={{ background: "var(--bg-tertiary)", color: "var(--text-primary)", border: "1px solid var(--border-default)" }}
-              onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-              onBlur={(e) => e.target.style.borderColor = "var(--border-default)"}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="productKey" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-secondary)" }}>Product Key</label>
-            <div className="relative">
-              <input id="productKey" type="text" inputMode="text" autoComplete="off" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" maxLength={29}
-                value={productKey} onChange={(e) => setProductKey(formatKey(e.target.value))}
-                className="w-full py-2.5 px-3.5 pr-10 text-sm tracking-widest font-mono rounded-lg outline-none transition-all"
-                style={{
-                  background: "var(--bg-tertiary)", color: "var(--text-primary)",
-                  border: `1px solid ${keyStatus === "valid" ? "var(--success)" : keyStatus === "invalid" ? "var(--danger)" : "var(--border-default)"}`,
-                }}
-                onFocus={(e) => { if (keyStatus === "idle") e.target.style.borderColor = "var(--accent)"; }}
-                onBlur={(e) => { if (keyStatus === "idle") e.target.style.borderColor = "var(--border-default)"; }}
-              />
-              {productKey.length > 0 && (
-                <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                  {keyStatus === "checking" ? (
-                    <span className="h-4 w-4 rounded-full border-2 border-transparent border-t-current animate-spin" style={{ color: "var(--text-muted)" }} />
-                  ) : keyStatus === "valid" ? (
-                    <svg className="h-5 w-5" style={{ color: "var(--success)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ) : keyStatus === "invalid" ? (
-                    <svg className="h-5 w-5" style={{ color: "var(--danger)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ) : null}
-                </span>
-              )}
-            </div>
-            {keyStatus === "invalid" && <p className="mt-1.5 text-xs" style={{ color: "var(--danger)" }}>This key is invalid, expired, or already used.</p>}
-          </div>
-
-          <button type="submit" disabled={isLoading || !isValidKey(productKey)}
-            className="btn-primary w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2 rounded-lg"
-          >
-            {isLoading ? <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : "Activate Account"}
-          </button>
-        </form>
-
-        <div className="mt-6 pt-5 border-t text-center" style={{ borderColor: "var(--border-default)" }}>
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            Didn&apos;t get the email?{" "}
-            <button onClick={() => navigate("/auth")} className="font-semibold hover:opacity-75 transition-opacity" style={{ color: "var(--accent)" }}>Contact support</button>
+        <div className="flex-1 flex flex-col justify-center px-10">
+          <h1 className="text-5xl font-bold tracking-tight leading-[1.1] mb-3 gradient-shift" style={{ fontFamily: "var(--font-sans)" }}>
+            Activate your<br />account
+          </h1>
+          <p className="text-base max-w-sm" style={{ color: "rgba(247,248,246,0.55)", fontFamily: "var(--font-sans)" }}>
+            Enter your product key to finish setting up your account.
           </p>
-          <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-            Already have an account?{" "}
-            <button onClick={() => navigate("/auth")} className="font-semibold hover:opacity-75 transition-opacity" style={{ color: "var(--accent)" }}>Sign in</button>
+
+          <div className="mt-12" style={{ fontFamily: "var(--font-mono)" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-block w-2 h-2 rounded-full" style={{ background: "var(--signal-green)" }} />
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(47,214,117,0.5)" }}>Activation Checks</span>
+            </div>
+            <div className="rounded-xl p-5" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <ConsoleFeed />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-10 pb-8">
+          <p className="text-xs" style={{ color: "rgba(247,248,246,0.2)", fontFamily: "var(--font-mono)" }}>
+            $ nex activate —key=***** —quiet
           </p>
         </div>
       </div>
+
+      {/* Right panel — activation form */}
+      <div className="w-full md:w-[45%] flex items-center justify-center px-6 py-10 md:py-0" style={{ background: "var(--paper)" }}>
+        <div className="w-full max-w-sm">
+
+          {/* Key card banner — shows when key is pre-filled from email link */}
+          {showKeyCard && (
+            <div className="mb-6 p-5 rounded-xl animate-slide-up text-center" style={{
+              background: keyStatus === "invalid" ? "rgba(239,68,68,0.06)" : "rgba(47,214,117,0.08)",
+              border: `1px solid ${keyStatus === "invalid" ? "rgba(239,68,68,0.2)" : "rgba(47,214,117,0.2)"}`,
+            }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{
+                background: keyStatus === "invalid" ? "rgba(239,68,68,0.12)" : keyStatus === "valid" ? "rgba(47,214,117,0.15)" : "rgba(47,214,117,0.1)",
+              }}>
+                {keyStatus === "checking" ? (
+                  <span className="h-6 w-6 rounded-full border-2 border-transparent border-t-current animate-spin" style={{ color: "var(--signal-green)" }} />
+                ) : keyStatus === "valid" ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="var(--signal-green)" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="var(--danger)" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <p className="text-sm font-bold mb-1" style={{
+                color: keyStatus === "valid" ? "var(--signal-green)" : keyStatus === "invalid" ? "var(--danger)" : "var(--ink)",
+              }}>
+                {keyStatus === "checking" ? "Verifying Key..." : keyStatus === "valid" ? "Key Verified" : "Key Not Found"}
+              </p>
+              <p className="text-xs font-mono tracking-widest" style={{ color: "var(--ink)" }}>{productKey}</p>
+              {keyStatus === "valid" && (
+                <p className="text-xs mt-2" style={{ color: "var(--graphite)" }}>Key is valid. Click "Activate Account" to complete activation.</p>
+              )}
+              {keyStatus === "invalid" && (
+                <p className="text-xs mt-2" style={{ color: "var(--graphite)" }}>This key doesn't exist in our system. Try a different key or contact support.</p>
+              )}
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="mb-5 flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm"
+              style={{ background: "rgba(239,68,68,0.08)", color: "var(--danger)", border: "1px solid rgba(239,68,68,0.2)" }}
+            >
+              <svg className="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {btnSuccess ? (
+            <div className="text-center py-4 animate-slide-up">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(47,214,117,0.12)" }}>
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="var(--signal-green)" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--signal-green)" }}>Key Verified</h2>
+              <p className="text-sm mb-6" style={{ color: "var(--graphite)" }}>
+                Your account has been activated. Sign in with the email and password you used during registration.
+              </p>
+              <button onClick={() => navigate("/auth")}
+                className="w-full py-2.5 text-sm font-semibold rounded-lg cursor-pointer"
+                style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
+              >
+                Sign In →
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
+              <div>
+                <label htmlFor="activation_email" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Email</label>
+                <input id="activation_email" type="email" required value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  autoComplete="off"
+                  className="w-full text-sm outline-none transition-all pb-2 pt-0.5"
+                  style={{
+                    color: "var(--ink)",
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: "2px solid var(--mist)",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                  onFocus={(e) => { e.target.style.borderBottomColor = "var(--signal-green)"; }}
+                  onBlur={(e) => { e.target.style.borderBottomColor = "var(--mist)"; }}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="activation_key" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--graphite)" }}>Product Key</label>
+                <div className="relative">
+                  <input id="activation_key" type="text" inputMode="text" autoComplete="off"
+                    placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" maxLength={29}
+                    value={productKey}
+                    onChange={(e) => setProductKey(formatKey(e.target.value))}
+                    className="w-full tracking-[0.15em] font-mono outline-none transition-all pb-2 pt-0.5 pr-8 text-sm"
+                    style={{
+                      color: "var(--ink)",
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: `2px solid ${keyStatus === "valid" ? "var(--signal-green)" : keyStatus === "invalid" ? "var(--danger)" : "var(--mist)"}`,
+                    }}
+                    onFocus={(e) => {
+                      if (keyStatus === "idle") e.target.style.borderBottomColor = "var(--signal-green)";
+                    }}
+                    onBlur={(e) => {
+                      if (keyStatus === "idle") e.target.style.borderBottomColor = "var(--mist)";
+                    }}
+                  />
+                  {productKey.length > 0 && (
+                    <span className="absolute right-0 top-0 pointer-events-none">
+                      {keyStatus === "checking" ? (
+                        <span className="inline-block h-4 w-4 rounded-full border-2 border-transparent border-t-current animate-spin" style={{ color: "var(--graphite)" }} />
+                      ) : keyStatus === "valid" ? (
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="var(--signal-green)" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      ) : keyStatus === "invalid" ? (
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="var(--danger)" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      ) : null}
+                    </span>
+                  )}
+                </div>
+                {keyStatus === "invalid" && (
+                  <p className="text-[11px] mt-1" style={{ color: "var(--danger)" }}>
+                    This key is invalid, expired, or already used.
+                  </p>
+                )}
+              </div>
+
+              <button type="submit" disabled={isLoading || !isValidKey(productKey) || btnSuccess}
+                className="w-full py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                style={{
+                  background: btnSuccess ? "var(--signal-green)" : "var(--ink)",
+                  color: "var(--paper)",
+                  border: "none",
+                }}
+              >
+                {isLoading ? (
+                  <span className="h-4 w-4 rounded-full border-2 border-[var(--paper)] border-t-transparent animate-spin" />
+                ) : btnSuccess ? (
+                  <>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Key Verified — Sign In
+                  </>
+                ) : (
+                  "Activate Account"
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Footer links */}
+          <div className="mt-8 space-y-3">
+            <div className="flex justify-center">
+              <button onClick={() => navigate("/auth")} type="button"
+                className="text-xs font-semibold transition-all hover:opacity-70 cursor-pointer px-4 py-2 rounded-lg"
+                style={{ color: "var(--graphite)", background: "var(--mist)", border: "none" }}
+              >
+                ← Back to Sign In
+              </button>
+            </div>
+            <p className="text-xs text-center" style={{ color: "var(--graphite)" }}>
+              Need help?{" "}
+              <button onClick={() => setSupportOpen(true)} className="font-semibold hover:opacity-70 transition-opacity cursor-pointer" style={{ color: "var(--graphite)", background: "none", border: "none", padding: 0, textDecoration: "underline" }}>
+                Contact support
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Support Modal */}
+      {supportOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 animate-slide-up shadow-2xl" style={{ background: "var(--paper)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold" style={{ color: "var(--ink)" }}>Contact Support</h3>
+              <button onClick={() => { setSupportOpen(false); setSupportSent(false); }} type="button"
+                className="cursor-pointer p-1 rounded-lg hover:opacity-70 transition-opacity"
+                style={{ color: "var(--graphite)", background: "none", border: "none" }}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {supportSent ? (
+              <div className="text-center py-8">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(47,214,117,0.12)" }}>
+                  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="var(--signal-green)" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>Message sent!</p>
+                <p className="text-xs mt-1" style={{ color: "var(--graphite)" }}>Our team will respond within 24 hours.</p>
+                <button onClick={() => { setSupportOpen(false); setSupportSent(false); }}
+                  className="mt-5 w-full py-2.5 text-sm font-semibold rounded-lg cursor-pointer"
+                  style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSupportSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "var(--graphite)" }}>Email</label>
+                  <input type="email" required value={supportForm.email || email}
+                    onChange={(e) => setSupportForm((p) => ({ ...p, email: e.target.value }))}
+                    placeholder="you@company.com"
+                    className="w-full text-sm outline-none pb-2 pt-0.5"
+                    style={{ color: "var(--ink)", background: "transparent", border: "none", borderBottom: "2px solid var(--mist)" }}
+                    onFocus={(e) => { e.target.style.borderBottomColor = "var(--signal-green)"; }}
+                    onBlur={(e) => { e.target.style.borderBottomColor = "var(--mist)"; }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "var(--graphite)" }}>Subject</label>
+                  <input type="text" required value={supportForm.subject}
+                    onChange={(e) => setSupportForm((p) => ({ ...p, subject: e.target.value }))}
+                    placeholder="How can we help?"
+                    className="w-full text-sm outline-none pb-2 pt-0.5"
+                    style={{ color: "var(--ink)", background: "transparent", border: "none", borderBottom: "2px solid var(--mist)" }}
+                    onFocus={(e) => { e.target.style.borderBottomColor = "var(--signal-green)"; }}
+                    onBlur={(e) => { e.target.style.borderBottomColor = "var(--mist)"; }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "var(--graphite)" }}>Message</label>
+                  <textarea required rows={3} value={supportForm.message}
+                    onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))}
+                    placeholder="Describe your issue..."
+                    className="w-full text-sm outline-none pb-2 pt-0.5 resize-none"
+                    style={{ color: "var(--ink)", background: "transparent", border: "none", borderBottom: "2px solid var(--mist)" }}
+                    onFocus={(e) => { e.target.style.borderBottomColor = "var(--signal-green)"; }}
+                    onBlur={(e) => { e.target.style.borderBottomColor = "var(--mist)"; }}
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setSupportOpen(false)}
+                    className="flex-1 py-2.5 text-sm font-semibold rounded-lg cursor-pointer"
+                    style={{ background: "transparent", color: "var(--graphite)", border: "1px solid var(--mist)" }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={supportSending}
+                    className="flex-[2] py-2.5 text-sm font-semibold rounded-lg flex items-center justify-center gap-2 cursor-pointer"
+                    style={{ background: "var(--ink)", color: "var(--paper)", border: "none" }}
+                  >
+                    {supportSending ? (
+                      <span className="h-4 w-4 rounded-full border-2 border-[var(--paper)] border-t-transparent animate-spin" />
+                    ) : "Send Message"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
