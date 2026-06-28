@@ -435,15 +435,14 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
     if (Object.keys(errs).length) return;
     setEnterpriseSending(true);
     try {
-      await fetch("https://api.web3forms.com/submit", {
+      await fetch("/api/enterprise-inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_key: "62dd773d-d156-48a6-baa0-8264963687ee",
           name: enterpriseForm.name,
           email: enterpriseForm.email,
-          subject: `Enterprise inquiry from ${enterpriseForm.company}`,
-          message: `Company: ${enterpriseForm.company}\n\n${enterpriseForm.message}`,
+          company: enterpriseForm.company,
+          message: enterpriseForm.message,
         }),
       });
     } catch { /* ignore */ }

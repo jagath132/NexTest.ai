@@ -1035,6 +1035,47 @@ export function createApiMiddleware(env) {
         return;
       }
 
+      // Landing page enterprise inquiry (no pending registration needed)
+      if (url.pathname === '/api/enterprise-inquiry' && req.method === 'POST') {
+        const rawBody = await readRequestBody(req);
+        const { name, email, company, message } = JSON.parse(rawBody || '{}');
+        if (!name || !email || !company || !message) {
+          sendJson(res, 400, { error: 'All fields are required.' });
+          return;
+        }
+        const db = getDb();
+        await db.collection('enterprise_inquiries').insertOne({
+          name, email, company, message,
+          source: 'landing_page',
+          createdAt: new Date().toISOString(),
+        });
+        try {
+          const transporter = (await import('nodemailer')).default;
+          const host = process.env.SMTP_HOST;
+          const port = parseInt(process.env.SMTP_PORT, 10) || 587;
+          const user = process.env.SMTP_USER;
+          const pass = process.env.SMTP_PASS;
+          const supportEmail = process.env.SUPPORT_EMAIL || 'support@forgeqa.in';
+          let t;
+          if (host && pass) {
+            t = transporter.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
+          } else {
+            const account = await transporter.createTestAccount();
+            t = transporter.createTransport({ host: 'smtp.ethereal.email', port: 587, secure: false, auth: { user: account.user, pass: account.pass } });
+          }
+          await t.sendMail({
+            from: process.env.SMTP_FROM || 'ForgeQA <onboarding@resend.dev>',
+            to: supportEmail,
+            subject: `Enterprise Inquiry from ${company}`,
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;"><h2>New Enterprise Inquiry</h2><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:8px;background:#f5f5f5;font-weight:bold;border:1px solid #ddd;">Name</td><td style="padding:8px;border:1px solid #ddd;">${name}</td></tr><tr><td style="padding:8px;background:#f5f5f5;font-weight:bold;border:1px solid #ddd;">Email</td><td style="padding:8px;border:1px solid #ddd;">${email}</td></tr><tr><td style="padding:8px;background:#f5f5f5;font-weight:bold;border:1px solid #ddd;">Company</td><td style="padding:8px;border:1px solid #ddd;">${company}</td></tr><tr><td style="padding:8px;background:#f5f5f5;font-weight:bold;border:1px solid #ddd;">Message</td><td style="padding:8px;border:1px solid #ddd;">${message}</td></tr></table><p style="color:#999;font-size:12px;">Submitted from ForgeQA landing page</p></body></html>`,
+          });
+        } catch (emailErr) {
+          console.warn('Failed to send enterprise inquiry email:', emailErr.message);
+        }
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
       sendJson(res, 404, { error: 'API route not found.' });
     } catch (error) {
       console.error('API error encountered:', error);
