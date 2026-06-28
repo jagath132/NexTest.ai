@@ -35,12 +35,18 @@ export function CustomersPage() {
     setLoadingDetail(false);
   }
 
-  const filtered = customers.filter((c) => {
-    if (search && !c.email.toLowerCase().includes(search.toLowerCase())) return false;
-    if (statusFilter === "approved" && c.rejected) return false;
-    if (statusFilter === "rejected" && !c.rejected) return false;
-    return true;
-  });
+  const statusCounts = {
+    approved: customers.filter((c) => c.status === "approved").length,
+    rejected: customers.filter((c) => c.status === "rejected").length,
+  };
+
+  const filtered = (search || statusFilter !== "all"
+    ? customers.filter((c) => {
+        if (statusFilter !== "all" && c.status !== statusFilter) return false;
+        if (search && !c.email.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      })
+    : customers);
 
   return (
     <div>
@@ -80,6 +86,20 @@ export function CustomersPage() {
         </div>
       </div>
 
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="pill-group">
+          <button className={`pill${statusFilter === "all" ? " active" : ""}`} onClick={() => setStatusFilter("all")}>
+            All <span className="pill-count">{customers.length}</span>
+          </button>
+          <button className={`pill${statusFilter === "approved" ? " active" : ""}`} onClick={() => setStatusFilter("approved")}>
+            Approved <span className="pill-count">{statusCounts.approved}</span>
+          </button>
+          <button className={`pill${statusFilter === "rejected" ? " active" : ""}`} onClick={() => setStatusFilter("rejected")}>
+            Rejected <span className="pill-count">{statusCounts.rejected}</span>
+          </button>
+        </div>
+      </div>
+
       <div className="card" style={{ padding: 0 }}>
         {loading ? (
           <div className="empty-state"><p>Loading customers...</p></div>
@@ -95,34 +115,30 @@ export function CustomersPage() {
           <div className="table-container">
             <table>
               <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Name</th>
-                  <th>Role / Status</th>
-                  <th>Product Key</th>
-                  <th>Key Status</th>
-                  <th>Registered</th>
-                  <th style={{ width: 80 }}></th>
-                </tr>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Product Key</th>
+                    <th>Key Status</th>
+                    <th>Registered</th>
+                    <th style={{ width: 80 }}></th>
+                  </tr>
               </thead>
               <tbody>
                 {filtered.map((c) => (
-                  <tr key={c.id} style={{ cursor: "pointer", opacity: c.rejected ? 0.6 : 1 }} onClick={() => openDetail(c)}>
+                  <tr key={c.id} style={{ cursor: "pointer", opacity: c.status === "rejected" ? 0.6 : 1 }} onClick={() => openDetail(c)}>
                     <td>{c.email}</td>
                     <td style={{ color: c.name ? "var(--color-text-primary)" : "var(--color-text-muted)", fontSize: 13 }}>
                       {c.name || "-"}
                     </td>
-                    <td>
-                      {c.rejected ? (
-                        <span className="badge badge-expired">Rejected</span>
-                      ) : (
-                        <span className={`badge ${c.role === "admin" ? "badge-used" : "badge-available"}`}>{c.role}</span>
-                      )}
-                    </td>
+                    <td><span className={`badge ${c.role === "admin" ? "badge-used" : "badge-available"}`}>{c.role}</span></td>
+                    <td><span className={`badge ${c.status === "rejected" ? "badge-expired" : "badge-used"}`} style={{ fontSize: 10 }}>{c.status}</span></td>
                     <td><span className="text-mono" style={{ fontSize: 12, letterSpacing: 1 }}>{c.productKey || <span style={{ color: "var(--color-text-muted)" }}>-</span>}</span></td>
                     <td>
                       {c.keyStatus ? (
-                        <span className={`badge ${c.rejected ? "badge-expired" : `badge-${c.keyStatus}`}`}>{c.rejected ? "rejected" : c.keyStatus}</span>
+                        <span className={`badge badge-${c.keyStatus}`}>{c.keyStatus}</span>
                       ) : <span style={{ color: "var(--color-text-muted)", fontSize: 12 }}>-</span>}
                     </td>
                     <td style={{ fontSize: 12, whiteSpace: "nowrap" }}>{new Date(c.createdAt).toLocaleDateString()}</td>
