@@ -125,6 +125,7 @@ export function RegisterPage() {
   const [enterpriseSubmitting, setEnterpriseSubmitting] = useState(false);
   const [enterpriseSubmitted, setEnterpriseSubmitted] = useState(false);
   const [enterpriseEmail2, setEnterpriseEmail2] = useState("");
+  const [keyActivated, setKeyActivated] = useState(false);
 
   const resetEnterpriseForm = useCallback(() => {
     setShowEnterpriseForm(false);
@@ -134,6 +135,7 @@ export function RegisterPage() {
     setEnterpriseContact("");
     setError("");
     setEnterpriseSubmitting(false);
+    setEnterpriseSubmitted(false);
   }, []);
 
   useEffect(() => {
@@ -145,6 +147,16 @@ export function RegisterPage() {
       return () => clearTimeout(timer);
     }
   }, [enterpriseSubmitted, navigate, resetEnterpriseForm]);
+
+  useEffect(() => {
+    if (keyActivated) {
+      const timer = setTimeout(() => {
+        setKeyActivated(false);
+        navigate("/auth");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [keyActivated, navigate]);
 
   useEffect(() => {
     setPlansLoading(true);
@@ -283,7 +295,7 @@ export function RegisterPage() {
     setIsLoading(true);
     try {
       await api.post("/api/auth/complete-registration", { email, productKey });
-      navigate("/auth");
+      setKeyActivated(true);
     } catch (err) {
       setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to complete registration with this key.");
     } finally {
@@ -698,6 +710,29 @@ export function RegisterPage() {
         </div>
       </div>
 
+      {/* Key activation success overlay */}
+      {keyActivated && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <div className="rounded-xl w-full max-w-sm p-8 text-center space-y-5" style={{ background: "var(--paper)", border: "1px solid var(--mist)" }}>
+            <div className="flex justify-center">
+              <div style={{
+                width: 72, height: 72, borderRadius: "50%",
+                background: "rgba(47,214,117,0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg className="w-9 h-9" style={{ color: "var(--signal-green)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold" style={{ color: "var(--ink)" }}>Account Activated!</h3>
+              <p className="text-sm" style={{ color: "var(--graphite)" }}>Your account has been successfully activated. Redirecting to sign in...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enterprise thank-you overlay */}
       {enterpriseSubmitted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in" style={{ background: "rgba(0,0,0,0.5)" }}>
@@ -766,6 +801,7 @@ export function RegisterPage() {
                 setEnterpriseSubmitting(true); setError("");
                 try {
                   await api.post("/api/auth/enterprise-inquiry", { pendingId, company: enterpriseCompany.trim(), teamSize: enterpriseTeamSize.trim(), requirements: enterpriseRequirements.trim(), contact: enterpriseContact.trim(), email });
+                  setShowEnterpriseForm(false);
                   setEnterpriseSubmitted(true);
                 } catch (err) {
                   setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to submit inquiry.");
